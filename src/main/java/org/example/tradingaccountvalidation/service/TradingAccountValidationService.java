@@ -3,7 +3,6 @@ package org.example.tradingaccountvalidation.service;
 import org.kie.api.runtime.KieContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.example.tradingaccountvalidation.model.AccountSnapshot;
 import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.repo.TradingAccountValidationInterface;
 import org.kie.api.runtime.KieSession;

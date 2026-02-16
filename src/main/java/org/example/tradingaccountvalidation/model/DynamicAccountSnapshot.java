@@ -10,9 +10,6 @@ public class DynamicAccountSnapshot {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private ObjectNode root;
 
-    /* =======================
-       CONSTRUCTORS
-       ======================= */
 
     public DynamicAccountSnapshot(JsonNode node) {
 
@@ -20,7 +17,6 @@ public class DynamicAccountSnapshot {
             throw new IllegalArgumentException("Root JSON must be an object");
         }
 
-        // Auto-unwrapping if payload is wrapped inside "raw"
         if (node.has("raw") && node.get("raw").isObject()) {
             node = node.get("raw");
         }
@@ -49,9 +45,6 @@ public class DynamicAccountSnapshot {
         this.root = (ObjectNode) parsed;
     }
 
-    /* =======================
-       GENERIC GET
-       ======================= */
 
     public Object get(String path) {
         JsonNode node = navigate(path);
@@ -69,9 +62,6 @@ public class DynamicAccountSnapshot {
         return node;
     }
 
-    /* =======================
-       TYPED GETTERS
-       ======================= */
 
     public String getString(String path) {
         Object val = get(path);
@@ -98,9 +88,6 @@ public class DynamicAccountSnapshot {
         return (val instanceof Boolean) ? (Boolean) val : null;
     }
 
-    /* =======================
-       SETTER
-       ======================= */
 
     public void set(String path, Object value) {
 
@@ -135,15 +122,10 @@ public class DynamicAccountSnapshot {
             current.set(last, MAPPER.valueToTree(value));
     }
 
-    /* =======================
-       PATH NAVIGATION
-       ======================= */
-
     private JsonNode navigate(String path) {
 
         String[] parts = clean(path).split("/");
         JsonNode current = root;
-
         for (String part : parts) {
             if (part.isEmpty()) continue;
             current = current.path(part);
@@ -156,10 +138,6 @@ public class DynamicAccountSnapshot {
         if (path == null) return "";
         return path.startsWith("/") ? path.substring(1) : path;
     }
-
-    /* =======================
-       UTILITIES
-       ======================= */
 
     public boolean exists(String path) {
         JsonNode node = navigate(path);
