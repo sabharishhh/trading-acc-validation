@@ -1,0 +1,178 @@
+package org.example.tradingaccountvalidation.model;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public class DynamicAccountSnapshot {
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private ObjectNode root;
+
+    /* =======================
+       CONSTRUCTORS
+       ======================= */
+
+    public DynamicAccountSnapshot(JsonNode node) {
+
+        if (node == null || !node.isObject()) {
+            throw new IllegalArgumentException("Root JSON must be an object");
+        }
+
+        // Auto-unwrapping if payload is wrapped inside "raw"
+        if (node.has("raw") && node.get("raw").isObject()) {
+            node = node.get("raw");
+        }
+
+        this.root = (ObjectNode) node;
+    }
+
+    public DynamicAccountSnapshot(String jsonPayload) {
+        try {
+            JsonNode parsed = MAPPER.readTree(jsonPayload);
+            initialize(parsed);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid JSON payload", e);
+        }
+    }
+
+    private void initialize(JsonNode parsed) {
+        if (parsed == null || !parsed.isObject()) {
+            throw new IllegalArgumentException("Root JSON must be an object");
+        }
+
+        if (parsed.has("raw") && parsed.get("raw").isObject()) {
+            parsed = parsed.get("raw");
+        }
+
+        this.root = (ObjectNode) parsed;
+    }
+
+    /* =======================
+       GENERIC GET
+       ======================= */
+
+    public Object get(String path) {
+        JsonNode node = navigate(path);
+
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+
+        if (node.isTextual()) return node.asText();
+        if (node.isInt()) return node.asInt();
+        if (node.isLong()) return node.asLong();
+        if (node.isDouble() || node.isFloat()) return node.asDouble();
+        if (node.isBoolean()) return node.asBoolean();
+
+        return node;
+    }
+
+    /* =======================
+       TYPED GETTERS
+       ======================= */
+
+    public String getString(String path) {
+        Object val = get(path);
+        return val != null ? val.toString() : null;
+    }
+
+    public Double getDouble(String path) {
+        Object val = get(path);
+        return (val instanceof Number) ? ((Number) val).doubleValue() : null;
+    }
+
+    public Long getLong(String path) {
+        Object val = get(path);
+        return (val instanceof Number) ? ((Number) val).longValue() : null;
+    }
+
+    public Integer getInt(String path) {
+        Object val = get(path);
+        return (val instanceof Number) ? ((Number) val).intValue() : null;
+    }
+
+    public Boolean getBoolean(String path) {
+        Object val = get(path);
+        return (val instanceof Boolean) ? (Boolean) val : null;
+    }
+
+    /* =======================
+       SETTER
+       ======================= */
+
+    public void set(String path, Object value) {
+
+        String[] parts = clean(path).split("/");
+        ObjectNode current = root;
+
+        for (int i = 0; i < parts.length - 1; i++) {
+
+            JsonNode next = current.get(parts[i]);
+
+            if (next == null || !next.isObject()) {
+                next = MAPPER.createObjectNode();
+                current.set(parts[i], next);
+            }
+
+            current = (ObjectNode) next;
+        }
+
+        String last = parts[parts.length - 1];
+
+        if (value instanceof String)
+            current.put(last, (String) value);
+        else if (value instanceof Integer)
+            current.put(last, (Integer) value);
+        else if (value instanceof Long)
+            current.put(last, (Long) value);
+        else if (value instanceof Double)
+            current.put(last, (Double) value);
+        else if (value instanceof Boolean)
+            current.put(last, (Boolean) value);
+        else
+            current.set(last, MAPPER.valueToTree(value));
+    }
+
+    /* =======================
+       PATH NAVIGATION
+       ======================= */
+
+    private JsonNode navigate(String path) {
+
+        String[] parts = clean(path).split("/");
+        JsonNode current = root;
+
+        for (String part : parts) {
+            if (part.isEmpty()) continue;
+            current = current.path(part);
+        }
+
+        return current;
+    }
+
+    private String clean(String path) {
+        if (path == null) return "";
+        return path.startsWith("/") ? path.substring(1) : path;
+    }
+
+    /* =======================
+       UTILITIES
+       ======================= */
+
+    public boolean exists(String path) {
+        JsonNode node = navigate(path);
+        return node != null && !node.isMissingNode() && !node.isNull();
+    }
+
+    @JsonValue
+    public JsonNode getRoot() {
+        return root;
+    }
+
+    @Override
+    public String toString() {
+        return root.toPrettyString();
+    }
+}

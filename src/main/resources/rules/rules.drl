@@ -1,0 +1,12 @@
+package rules;
+
+import org.example.tradingaccountvalidation.model.AccountSnapshot;
+
+rule "Inactive Account Validation"
+    when
+        $s : AccountSnapshot( equityOpenPosn == "N", mtfOpen == "N" )
+    then
+        System.out.println("DEBUG: Rule matches! Updating status...");
+        $s.setAccountStatus("NOT ALLOWED");
+        update($s);
+end
