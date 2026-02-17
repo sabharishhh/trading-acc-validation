@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.annotation.JsonValue;
+import org.example.tradingaccountvalidation.controller.TradingAccountValidationController;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DynamicAccountSnapshot {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private ObjectNode root;
 
+    private static final Logger log = LoggerFactory.getLogger(DynamicAccountSnapshot.class);
 
     public DynamicAccountSnapshot(JsonNode node) {
 
@@ -152,5 +156,9 @@ public class DynamicAccountSnapshot {
     @Override
     public String toString() {
         return root.toPrettyString();
+    }
+
+    public void printStatus(String status) {
+        log.info("Account Status: {}", status);
     }
 }
