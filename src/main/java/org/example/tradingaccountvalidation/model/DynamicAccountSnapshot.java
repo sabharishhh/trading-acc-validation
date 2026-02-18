@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.annotation.JsonValue;
-import org.example.tradingaccountvalidation.controller.TradingAccountValidationController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
