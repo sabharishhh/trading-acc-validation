@@ -137,6 +137,30 @@ public class DynamicAccountSnapshot {
         return current;
     }
 
+    public void appendToArray(String path, String value) {
+        String[] parts = clean(path).split("/");
+        ObjectNode current = root;
+
+        for (int i = 0; i < parts.length - 1; i++) {
+            JsonNode next = current.get(parts[i]);
+            if (next == null || !next.isObject()) {
+                next = MAPPER.createObjectNode();
+                current.set(parts[i], next);
+            }
+            current = (ObjectNode) next;
+        }
+
+        String last = parts[parts.length - 1];
+
+        JsonNode existing = current.get(last);
+
+        if (existing == null || !existing.isArray()) {
+            current.putArray(last).add(value);
+        } else {
+            ((com.fasterxml.jackson.databind.node.ArrayNode) existing).add(value);
+        }
+    }
+
     private String clean(String path) {
         if (path == null) return "";
         return path.startsWith("/") ? path.substring(1) : path;
