@@ -16,22 +16,56 @@ public class TradingAccountValidationService implements TradingAccountValidation
     @Autowired
     private KieContainer kieContainer;
 
+    @Autowired
+    private RuleDiagnosticService diagnosticService;
+
     @Override
     public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
-        log.info("Account object received for id: {}", snapshot.getString("/account/customerId"));
+
+        log.info("Account object received for id: {}",
+                snapshot.getString("/account/customerId"));
+
+        KieSession session = null;
 
         try {
-            KieSession session = kieContainer.newKieSession();
+            session = kieContainer.newKieSession();
 
             session.insert(snapshot);
             int firedRule = session.fireAllRules();
 
             log.info("Rules fired: {}", firedRule);
+
+            // ---- Diagnostic Hook ----
+
+            String allowed = snapshot.getString("/account/output/allowed");
+
+            if ("NOT ALLOWED".equals(allowed)) {
+
+                String agendaGroup =
+                        snapshot.getString("/account/statusTo");
+
+                var diagnostics =
+                        diagnosticService.diagnose(snapshot, agendaGroup);
+
+                snapshot.set("/account/output/diagnostics", diagnostics);
+            }
+
             return snapshot;
 
         } catch (Exception e) {
-            log.info("Error validating account status for id: {}, error: {}", snapshot.getString("/account/customerId"), e.getMessage());
+
+            log.error("Error validating account status for id: {}",
+                    snapshot.getString("/account/customerId"), e);
+
             return snapshot;
+
+        } finally {
+
+            if (session != null) {
+                session.dispose();
+            }
         }
     }
+
+
 }
