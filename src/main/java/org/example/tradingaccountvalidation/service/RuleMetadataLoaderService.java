@@ -1,82 +1,103 @@
 package org.example.tradingaccountvalidation.service;
 
 import jakarta.annotation.PostConstruct;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.example.tradingaccountvalidation.model.ConditionMetadata;
-import org.example.tradingaccountvalidation.model.RuleMetadata;
-import org.example.tradingaccountvalidation.repo.MetadataLoader;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.example.tradingaccountvalidation.model.ConditionMeta;
+import org.example.tradingaccountvalidation.model.RuleMeta;
+import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
-public class RuleMetadataLoaderService implements MetadataLoader {
+public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
-    private Map<String, List<RuleMetadata>> rulesByAgenda = new HashMap<>();
+    private final List<RuleMeta> allRules = new ArrayList<>();
 
     @PostConstruct
     public void load() throws Exception {
 
-        InputStream is = getClass()
-                .getClassLoader()
-                .getResourceAsStream("rules/rules_dynamic.xlsx");
+        InputStream is =
+                new ClassPathResource("rules/rules_dynamic.xlsx")
+                        .getInputStream();
 
-        Workbook workbook = WorkbookFactory.create(is);
+        Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
 
-        int headerRowIndex = 7;  // adjust based on your sheet layout
-        int firstDataRow = 10;
+        Row header = sheet.getRow(0);
 
-        for (int i = firstDataRow; i <= sheet.getLastRowNum(); i++) {
+        Map<Integer, String> columnPathMap = new HashMap<>();
+
+        for (Cell cell : header) {
+            String headerValue = getCellValue(cell);
+            if (headerValue != null && headerValue.startsWith("/account/")) {
+                columnPathMap.put(cell.getColumnIndex(), headerValue);
+            }
+        }
+
+        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
             if (row == null) continue;
 
-            String ruleName = row.getCell(0).getStringCellValue();
-            String agenda = row.getCell(1).getStringCellValue();
+            String ruleId = getCellValue(row.getCell(0));
+            if (ruleId == null || ruleId.isBlank()) continue;
 
-            List<ConditionMetadata> conditions = new ArrayList<>();
+            String agenda = getCellValue(row.getCell(1));
+            String from   = getCellValue(row.getCell(2));
+            String to     = getCellValue(row.getCell(3));
 
-            // Now parse condition columns.
-            // Example:
-            // statusFrom column at index 2
-            String statusFrom = row.getCell(2).getStringCellValue();
-            conditions.add(new ConditionMetadata(
-                    "/account/statusFrom",
-                    statusFrom
-            ));
+            RuleMeta meta =
+                    new RuleMeta(ruleId, agenda, from, to);
 
-            // statusTo column at index 3
-            String statusTo = row.getCell(3).getStringCellValue();
-            conditions.add(new ConditionMetadata(
-                    "/account/statusTo",
-                    statusTo
-            ));
+            for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
 
-            // equityOpenPosition column at index 4
-            String equity = row.getCell(4).getStringCellValue();
-            conditions.add(new ConditionMetadata(
-                    "/account/equityOpenPosition",
-                    equity
-            ));
+                Cell conditionCell =
+                        row.getCell(entry.getKey());
 
-            RuleMetadata ruleMeta =
-                    new RuleMetadata(ruleName, agenda, conditions);
+                String expected = getCellValue(conditionCell);
 
-            rulesByAgenda
-                    .computeIfAbsent(agenda, k -> new ArrayList<>())
-                    .add(ruleMeta);
+                if (expected != null && !expected.isBlank()) {
+                    meta.getConditions().add(
+                            new ConditionMeta(
+                                    entry.getValue(),
+                                    expected
+                            )
+                    );
+                }
+            }
+
+            allRules.add(meta);
         }
+
+        workbook.close();
+        is.close();
     }
 
-    public List<RuleMetadata> getRulesForAgenda(String agenda) {
-        return rulesByAgenda.getOrDefault(agenda, List.of());
+    @Override
+    public List<RuleMeta> getByTransition(String from, String to) {
+
+        return allRules.stream()
+                .filter(r ->
+                        Objects.equals(r.getStatusFrom(), from) &&
+                                Objects.equals(r.getStatusTo(), to)
+                )
+                .toList();
+    }
+
+    private String getCellValue(Cell cell) {
+
+        if (cell == null) return null;
+
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue().trim();
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case NUMERIC -> String.valueOf((long) cell.getNumericCellValue());
+            case FORMULA -> cell.getStringCellValue();
+            default -> null;
+        };
     }
 }
