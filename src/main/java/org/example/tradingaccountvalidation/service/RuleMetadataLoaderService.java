@@ -21,13 +21,33 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     public void load() throws Exception {
 
         InputStream is =
-                new ClassPathResource("rules/rules_dynamic.xlsx")
+                new ClassPathResource("rules/rules_dynamic_test.xlsx")
                         .getInputStream();
 
         Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
 
-        Row header = sheet.getRow(0);
+        // 🔥 Dynamically find JSON path header row
+        Row header = null;
+
+        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+            Row r = sheet.getRow(i);
+            if (r == null) continue;
+
+            for (Cell c : r) {
+                String val = getCellValue(c);
+                if (val != null && val.startsWith("/account/")) {
+                    header = r;
+                    break;
+                }
+            }
+
+            if (header != null) break;
+        }
+
+        if (header == null) {
+            throw new RuntimeException("JSON path header row not found");
+        }
 
         Map<Integer, String> columnPathMap = new HashMap<>();
 
@@ -38,7 +58,8 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             }
         }
 
-        for (int i = 1; i <= sheet.getLastRowNum(); i++) {
+        // 🔥 Load rule rows (skip everything above header)
+        for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
             if (row == null) continue;
