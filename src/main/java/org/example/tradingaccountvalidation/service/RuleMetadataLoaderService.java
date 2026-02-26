@@ -20,9 +20,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     @PostConstruct
     public void load() throws Exception {
 
-        InputStream is =
-                new ClassPathResource("rules/rules_dynamic.xlsx")
-                        .getInputStream();
+        InputStream is = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
 
         Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
@@ -58,7 +56,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             }
         }
 
-        // Load rule rows (skip everything above header)
+        // Load rule rows
         for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
@@ -71,29 +69,20 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             String from   = getCellValue(row.getCell(2));
             String to     = getCellValue(row.getCell(3));
 
-            RuleMeta meta =
-                    new RuleMeta(ruleId, agenda, from, to);
+            RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
 
             for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
 
-                Cell conditionCell =
-                        row.getCell(entry.getKey());
-
+                Cell conditionCell = row.getCell(entry.getKey());
                 String expected = getCellValue(conditionCell);
 
                 if (expected != null && !expected.isBlank()) {
-                    meta.getConditions().add(
-                            new ConditionMeta(
-                                    entry.getValue(),
-                                    expected
-                            )
+                    meta.getConditions().add(new ConditionMeta(entry.getValue(), expected)
                     );
                 }
             }
-
             allRules.add(meta);
         }
-
         workbook.close();
         is.close();
     }
@@ -103,8 +92,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
         return allRules.stream()
                 .filter(r ->
-                        Objects.equals(r.getStatusFrom(), from) &&
-                                Objects.equals(r.getStatusTo(), to)
+                        Objects.equals(r.getStatusFrom(), from) && Objects.equals(r.getStatusTo(), to)
                 )
                 .toList();
     }

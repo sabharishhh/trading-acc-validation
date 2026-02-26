@@ -65,7 +65,6 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
             snapshot.set("/account/output/evaluationStatus", "ERROR");
             snapshot.set("/account/output/message", e.getMessage());
-
             return snapshot;
         } finally {
             if (session != null) {

@@ -12,9 +12,7 @@ import java.util.*;
 public class RuleDiagnosisService implements RuleDiagnosisInterface {
 
     @Override
-    public List<Map<String, Object>> diagnose(
-            DynamicAccountSnapshot snapshot,
-            List<RuleMeta> rules) {
+    public List<Map<String, Object>> diagnose(DynamicAccountSnapshot snapshot, List<RuleMeta> rules) {
 
         List<Map<String, Object>> diagnostics = new ArrayList<>();
 
@@ -24,11 +22,9 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
 
             for (ConditionMeta condition : rule.getConditions()) {
 
-                String actual =
-                        snapshot.getString(condition.getPath());
+                String actual = snapshot.getString(condition.getPath());
 
                 if (!Objects.equals(condition.getExpected(), actual)) {
-
                     Map<String, String> fail = new HashMap<>();
                     fail.put("path", condition.getPath());
                     fail.put("expected", condition.getExpected());
@@ -39,9 +35,7 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
             }
 
             if (!failedConditions.isEmpty()) {
-
-                Map<String, Object> ruleDiag =
-                        new HashMap<>();
+                Map<String, Object> ruleDiag = new HashMap<>();
 
                 ruleDiag.put("ruleId", rule.getRuleId());
                 ruleDiag.put("failedConditions", failedConditions);
@@ -49,7 +43,6 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
                 diagnostics.add(ruleDiag);
             }
         }
-
         return diagnostics;
     }
 }
