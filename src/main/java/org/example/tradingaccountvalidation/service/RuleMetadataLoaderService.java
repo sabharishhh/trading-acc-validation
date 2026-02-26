@@ -8,7 +8,6 @@ import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-
 import java.io.InputStream;
 import java.util.*;
 
@@ -16,6 +15,7 @@ import java.util.*;
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     private final List<RuleMeta> allRules = new ArrayList<>();
 
+    @Override
     @PostConstruct
     public void load() throws Exception {
         InputStream file = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
@@ -45,7 +45,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             throw new RuntimeException("JSON path header not found");
         }
 
-        // Build column → JSON path map
+        // column -> JSON path map
         Map<Integer, String> columnPathMap = new HashMap<>();
 
         for (Cell cell : header) {
@@ -70,7 +70,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             }
         }
 
-        // Load rule rows (after desc row)
+        // Load rule rows
         for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
 
@@ -86,14 +86,12 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             String from = getCellValue(row.getCell(2));
             String to = getCellValue(row.getCell(3));
 
-            RuleMeta meta =
-                    new RuleMeta(ruleId, agenda, from, to);
+            RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
 
             // Extract condition columns
             for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
 
                 Cell conditionCell = row.getCell(entry.getKey());
-
                 String expected = getCellValue(conditionCell);
 
                 if (expected != null && !expected.isBlank()) {
@@ -111,10 +109,8 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     public List<RuleMeta> getByTransition(String from, String to) {
 
         return allRules.stream()
-                .filter(r ->
-                        Objects.equals(r.getStatusFrom(), from)
-                                && Objects.equals(r.getStatusTo(), to)
-                ).toList();
+                .filter(r -> Objects.equals(r.getStatusFrom(), from) && Objects.equals(r.getStatusTo(), to))
+                .toList();
     }
 
     private String getCellValue(Cell cell) {
