@@ -14,15 +14,11 @@ import java.util.*;
 
 @Component
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
-
     private final List<RuleMeta> allRules = new ArrayList<>();
 
     @PostConstruct
     public void load() throws Exception {
-
-        InputStream file =
-                new ClassPathResource("rules/rules_dynamic.xlsx")
-                        .getInputStream();
+        InputStream file = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
 
         Workbook workbook = new XSSFWorkbook(file);
         Sheet sheet = workbook.getSheetAt(0);
@@ -42,7 +38,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                     break;
                 }
             }
-
             if (header != null) break;
         }
 
@@ -54,7 +49,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         Map<Integer, String> columnPathMap = new HashMap<>();
 
         for (Cell cell : header) {
-
             String headerValue = getCellValue(cell);
 
             if (headerValue != null && headerValue.startsWith("/account/")) {
@@ -64,29 +58,20 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
         // Read description row
         Row descriptionRow = sheet.getRow(header.getRowNum() + 1);
-
         Map<Integer, String> columnDescriptionMap = new HashMap<>();
 
         if (descriptionRow != null) {
-
             for (Cell cell : descriptionRow) {
-
                 String description = getCellValue(cell);
 
                 if (description != null && !description.isBlank()) {
-                    columnDescriptionMap.put(
-                            cell.getColumnIndex(),
-                            description
-                    );
+                    columnDescriptionMap.put(cell.getColumnIndex(), description);
                 }
             }
         }
 
         // Load rule rows (after desc row)
-        for (int i = header.getRowNum() + 2;
-             i <= sheet.getLastRowNum();
-             i++) {
-
+        for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
             Row row = sheet.getRow(i);
 
             if (row == null)
@@ -98,41 +83,26 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 continue;
 
             String agenda = getCellValue(row.getCell(1));
-            String from   = getCellValue(row.getCell(2));
-            String to     = getCellValue(row.getCell(3));
+            String from = getCellValue(row.getCell(2));
+            String to = getCellValue(row.getCell(3));
 
             RuleMeta meta =
                     new RuleMeta(ruleId, agenda, from, to);
 
             // Extract condition columns
-            for (Map.Entry<Integer, String> entry :
-                    columnPathMap.entrySet()) {
+            for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
 
-                Cell conditionCell =
-                        row.getCell(entry.getKey());
+                Cell conditionCell = row.getCell(entry.getKey());
 
-                String expected =
-                        getCellValue(conditionCell);
+                String expected = getCellValue(conditionCell);
 
                 if (expected != null && !expected.isBlank()) {
-
-                    String template =
-                            columnDescriptionMap
-                                    .get(entry.getKey());
-
-                    meta.getConditions().add(
-                            new ConditionMeta(
-                                    entry.getValue(),
-                                    expected,
-                                    template
-                            )
-                    );
+                    String template = columnDescriptionMap.get(entry.getKey());
+                    meta.getConditions().add(new ConditionMeta(entry.getValue(), expected, template));
                 }
             }
-
             allRules.add(meta);
         }
-
         workbook.close();
         file.close();
     }
@@ -144,12 +114,10 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 .filter(r ->
                         Objects.equals(r.getStatusFrom(), from)
                                 && Objects.equals(r.getStatusTo(), to)
-                )
-                .toList();
+                ).toList();
     }
 
     private String getCellValue(Cell cell) {
-
         if (cell == null) return null;
 
         return switch (cell.getCellType()) {

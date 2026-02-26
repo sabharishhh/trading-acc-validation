@@ -5,7 +5,6 @@ import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleDiagnosisInterface;
 import org.springframework.stereotype.Component;
-
 import java.util.*;
 
 @Component
@@ -39,7 +38,6 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
             }
 
             if (!failedConditions.isEmpty()) {
-
                 Map<String, Object> ruleDiag = new HashMap<>();
 
                 ruleDiag.put("ruleId", rule.getRuleId());
