@@ -8,7 +8,6 @@ import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
-
 import java.io.InputStream;
 import java.util.*;
 
@@ -19,10 +18,8 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
     @PostConstruct
     public void load() throws Exception {
-
-        InputStream is = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
-
-        Workbook workbook = new XSSFWorkbook(is);
+        InputStream file = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
+        Workbook workbook = new XSSFWorkbook(file);
         Sheet sheet = workbook.getSheetAt(0);
 
         // Dynamically find JSON path header row
@@ -44,7 +41,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         }
 
         if (header == null) {
-            throw new RuntimeException("JSON path header row not found");
+            throw new RuntimeException("JSON path header not found");
         }
 
         Map<Integer, String> columnPathMap = new HashMap<>();
@@ -84,7 +81,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             allRules.add(meta);
         }
         workbook.close();
-        is.close();
+        file.close();
     }
 
     @Override
@@ -98,7 +95,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     }
 
     private String getCellValue(Cell cell) {
-
         if (cell == null) return null;
 
         return switch (cell.getCellType()) {

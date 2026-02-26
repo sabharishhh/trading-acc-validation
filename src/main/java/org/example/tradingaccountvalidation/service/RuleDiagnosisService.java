@@ -17,17 +17,15 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
         List<Map<String, Object>> diagnostics = new ArrayList<>();
 
         for (RuleMeta rule : rules) {
-
             List<Map<String, String>> failedConditions = new ArrayList<>();
 
             for (ConditionMeta condition : rule.getConditions()) {
+                String actual = snapshot.getString(condition.path());
 
-                String actual = snapshot.getString(condition.getPath());
-
-                if (!Objects.equals(condition.getExpected(), actual)) {
+                if (!Objects.equals(condition.expected(), actual)) {
                     Map<String, String> fail = new HashMap<>();
-                    fail.put("path", condition.getPath());
-                    fail.put("expected", condition.getExpected());
+                    fail.put("path", condition.path());
+                    fail.put("expected", condition.expected());
                     fail.put("actual", actual);
 
                     failedConditions.add(fail);
