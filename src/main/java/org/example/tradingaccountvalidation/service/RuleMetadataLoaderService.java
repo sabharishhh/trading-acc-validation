@@ -27,7 +27,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         Workbook workbook = new XSSFWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
 
-        // 🔥 Dynamically find JSON path header row
+        // Dynamically find JSON path header row
         Row header = null;
 
         for (int i = 0; i <= sheet.getLastRowNum(); i++) {
@@ -58,7 +58,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             }
         }
 
-        // 🔥 Load rule rows (skip everything above header)
+        // Load rule rows (skip everything above header)
         for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
 
             Row row = sheet.getRow(i);
