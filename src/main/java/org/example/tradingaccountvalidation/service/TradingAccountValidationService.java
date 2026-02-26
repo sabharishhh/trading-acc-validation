@@ -11,13 +11,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class TradingAccountValidationService implements TradingAccountValidationInterface {
-
     private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationService.class);
 
     @Autowired
@@ -31,7 +29,6 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
     @Override
     public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
-
         String customerId = snapshot.getString("/account/customerId");
 
         log.info("Account object received for id: {}", customerId);
@@ -39,7 +36,6 @@ public class TradingAccountValidationService implements TradingAccountValidation
         KieSession session = null;
 
         try {
-
             session = kieContainer.newKieSession();
             session.insert(snapshot);
 
@@ -56,7 +52,7 @@ public class TradingAccountValidationService implements TradingAccountValidation
                 snapshot.set("/account/output/evaluationStatus", "No Valid Rule Applicable");
                 snapshot.set("/account/output/statusFrom", from);
                 snapshot.set("/account/output/statusTo", to);
-                snapshot.set("/account/output/diagnostics", diagnostics);
+                snapshot.set("/account/output/reasons", diagnostics);
             }
             return snapshot;
 

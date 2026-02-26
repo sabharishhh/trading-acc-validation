@@ -65,7 +65,6 @@ public class DynamicAccountSnapshot {
         return node;
     }
 
-
     public String getString(String path) {
         Object val = get(path);
         return val != null ? val.toString() : null;
@@ -90,7 +89,6 @@ public class DynamicAccountSnapshot {
         Object val = get(path);
         return (val instanceof Boolean) ? (Boolean) val : null;
     }
-
 
     public void set(String path, Object value) {
 

@@ -13,7 +13,6 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
 
     @Override
     public List<Map<String, Object>> diagnose(DynamicAccountSnapshot snapshot, List<RuleMeta> rules) {
-
         List<Map<String, Object>> diagnostics = new ArrayList<>();
 
         for (RuleMeta rule : rules) {
@@ -23,16 +22,24 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
                 String actual = snapshot.getString(condition.path());
 
                 if (!Objects.equals(condition.expected(), actual)) {
+
                     Map<String, String> fail = new HashMap<>();
-                    fail.put("path", condition.path());
-                    fail.put("expected", condition.expected());
-                    fail.put("actual", actual);
+                    String safeActual = actual == null ? "null" : actual;
+                    String template = condition.template() == null
+                                    ? "Expected $expected but found $actual"
+                                    : condition.template();
+
+                    String description = template.replace("$expected", condition.expected()).replace("$actual", safeActual);
+
+                    fail.put("Path", condition.path());
+                    fail.put("Reason", description);
 
                     failedConditions.add(fail);
                 }
             }
 
             if (!failedConditions.isEmpty()) {
+
                 Map<String, Object> ruleDiag = new HashMap<>();
 
                 ruleDiag.put("ruleId", rule.getRuleId());
