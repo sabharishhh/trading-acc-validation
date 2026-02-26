@@ -21,7 +21,7 @@ public class DroolsConfig {
 
     private KieFileSystem getKieFileSystem() throws IOException {
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-        kieFileSystem.write(ResourceFactory.newClassPathResource("rules/rules_dynamic_test.xlsx").setResourceType(ResourceType.DTABLE));
+        kieFileSystem.write(ResourceFactory.newClassPathResource("rules/rules_dynamic.xlsx").setResourceType(ResourceType.DTABLE));
         log.info("Class path resource loaded successfully.");
 
         return kieFileSystem;

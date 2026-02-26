@@ -21,7 +21,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     public void load() throws Exception {
 
         InputStream is =
-                new ClassPathResource("rules/rules_dynamic_test.xlsx")
+                new ClassPathResource("rules/rules_dynamic.xlsx")
                         .getInputStream();
 
         Workbook workbook = new XSSFWorkbook(is);

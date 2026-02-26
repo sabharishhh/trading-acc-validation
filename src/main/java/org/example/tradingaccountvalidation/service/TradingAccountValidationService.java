@@ -16,12 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class TradingAccountValidationService
-        implements TradingAccountValidationInterface {
+public class TradingAccountValidationService implements TradingAccountValidationInterface {
 
-    private static final Logger log =
-            LoggerFactory.getLogger(
-                    TradingAccountValidationService.class);
+    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationService.class);
 
     @Autowired
     private KieContainer kieContainer;
@@ -33,11 +30,9 @@ public class TradingAccountValidationService
     private RuleMetadataLoaderInterface metadataLoader;
 
     @Override
-    public DynamicAccountSnapshot validateAccount(
-            DynamicAccountSnapshot snapshot) {
+    public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
 
-        String customerId =
-                snapshot.getString("/account/customerId");
+        String customerId = snapshot.getString("/account/customerId");
 
         log.info("Account object received for id: {}", customerId);
 
@@ -46,45 +41,33 @@ public class TradingAccountValidationService
         try {
 
             session = kieContainer.newKieSession();
-
             session.insert(snapshot);
 
             int firedRule = session.fireAllRules();
-
             log.info("Rules fired: {}", firedRule);
 
             if (firedRule == 0) {
+                String from = snapshot.getString("/account/statusFrom");
+                String to = snapshot.getString("/account/statusTo");
 
-                String from =
-                        snapshot.getString("/account/statusFrom");
+                List<RuleMeta> rules = metadataLoader.getByTransition(from, to);
+                List<Map<String, Object>> diagnostics = diagnosticService.diagnose(snapshot, rules);
 
-                String to =
-                        snapshot.getString("/account/statusTo");
-
-                List<RuleMeta> rules =
-                        metadataLoader.getByTransition(from, to);
-
-                List<Map<String, Object>> diagnostics =
-                        diagnosticService.diagnose(snapshot, rules);
-
-                snapshot.set("/account/output/allowed", "NOT ALLOWED");
+                snapshot.set("/account/output/evaluationStatus", "No Valid Rule Applicable");
+                snapshot.set("/account/output/statusFrom", from);
                 snapshot.set("/account/output/statusTo", to);
                 snapshot.set("/account/output/diagnostics", diagnostics);
             }
-
             return snapshot;
 
         } catch (Exception e) {
-
             log.error("Validation error for id: {}", customerId, e);
 
-            snapshot.set("/account/output/allowed", "ERROR");
+            snapshot.set("/account/output/evaluationStatus", "ERROR");
             snapshot.set("/account/output/message", e.getMessage());
 
             return snapshot;
-
         } finally {
-
             if (session != null) {
                 session.dispose();
             }
