@@ -1,5 +1,6 @@
 package org.example.tradingaccountvalidation.service;
 
+import org.example.tradingaccountvalidation.controller.TradingAccountValidationController;
 import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleDiagnosisInterface;
@@ -8,6 +9,8 @@ import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.example.tradingaccountvalidation.repo.TradingAccountValidationInterface;
 import org.kie.api.runtime.KieSession;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -17,6 +20,7 @@ public class TradingAccountValidationService implements TradingAccountValidation
     private final RuleEngineInterface engine;
     private final RuleDiagnosisInterface diagnosis;
     private final RuleMetadataLoaderInterface metadataLoader;
+    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationController.class);
 
     public TradingAccountValidationService(
             RuleEngineInterface engine,
@@ -37,6 +41,7 @@ public class TradingAccountValidationService implements TradingAccountValidation
             session.insert(snapshot);
 
             int fired = session.fireAllRules();
+            log.info("Rules fired: " + fired);
 
             if (fired == 0) {
                 String from = snapshot.getString("/account/statusFrom");

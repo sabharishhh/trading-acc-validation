@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/validate")
 public class TradingAccountValidationController {
-
     private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationController.class);
 
     @Autowired

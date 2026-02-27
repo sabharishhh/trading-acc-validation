@@ -20,8 +20,7 @@ public class RuleEngineService implements RuleEngineInterface {
     @Value("${rules.folder}")
     private String rulesFolder;
 
-    private final AtomicReference<KieContainer> containerRef =
-            new AtomicReference<>();
+    private final AtomicReference<KieContainer> containerRef = new AtomicReference<>();
 
     @PostConstruct
     public void init() {
@@ -30,7 +29,6 @@ public class RuleEngineService implements RuleEngineInterface {
 
     @Override
     public synchronized void reloadRules() {
-
         KieServices ks = KieServices.Factory.get();
         KieFileSystem kfs = ks.newKieFileSystem();
 
@@ -39,29 +37,17 @@ public class RuleEngineService implements RuleEngineInterface {
 
         if (files != null) {
             for (File file : files) {
-                kfs.write(
-                        ResourceFactory
-                                .newFileResource(file)
-                                .setResourceType(ResourceType.DTABLE)
-                );
+                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
             }
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
 
-        if (builder.getResults()
-                .hasMessages(Message.Level.ERROR)) {
-            throw new RuntimeException(
-                    "Rule build failed: " +
-                            builder.getResults().getMessages()
-            );
+        if (builder.getResults().hasMessages(Message.Level.ERROR)) {
+            throw new RuntimeException("Rule build failed: " + builder.getResults().getMessages());
         }
 
-        KieContainer newContainer =
-                ks.newKieContainer(
-                        ks.getRepository().getDefaultReleaseId()
-                );
-
+        KieContainer newContainer = ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
         containerRef.set(newContainer);
     }
 

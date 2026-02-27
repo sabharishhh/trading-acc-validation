@@ -7,10 +7,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
+import java.util.Objects;
 
 @Service
 public class RuleStorageService implements RuleStorageInterface {
-
     @Value("${rules.folder}")
     private String rulesFolder;
 
@@ -18,25 +18,24 @@ public class RuleStorageService implements RuleStorageInterface {
 
     @Override
     public void validate(MultipartFile file) {
-
         if (file == null || file.isEmpty()) {
+            log.info()
             throw new RuntimeException("File is empty");
         }
 
         if (file.getSize() > MAX_SIZE) {
-            throw new RuntimeException("File exceeds 5MB");
+            throw new RuntimeException("File exceeds 5 MB");
         }
 
         String name = file.getOriginalFilename();
 
         if (name == null || !name.toLowerCase().endsWith(".xlsx")) {
-            throw new RuntimeException("Only .xlsx allowed");
+            throw new RuntimeException("Only .xlsx files allowed");
         }
     }
 
     @Override
     public void save(MultipartFile file) {
-
         try {
             Path folder = Paths.get(rulesFolder);
 
@@ -44,16 +43,8 @@ public class RuleStorageService implements RuleStorageInterface {
                 Files.createDirectories(folder);
             }
 
-            Path target = folder.resolve(
-                    file.getOriginalFilename()
-            );
-
-            Files.copy(
-                    file.getInputStream(),
-                    target,
-                    StandardCopyOption.REPLACE_EXISTING
-            );
-
+            Path target = folder.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException("File save failed", e);
         }
