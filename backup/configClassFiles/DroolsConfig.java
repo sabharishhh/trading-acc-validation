@@ -17,6 +17,7 @@ import java.io.IOException;
 
 @Configuration
 public class DroolsConfig {
+
     private static final Logger log = LoggerFactory.getLogger(DroolsConfig.class);
 
     private final KieServices kieServices = KieServices.Factory.get();
@@ -24,7 +25,14 @@ public class DroolsConfig {
     @Value("${rules.folder}")
     private String rulesFolderPath;
 
-    private KieFileSystem getKieFileSystem() throws IOException {
+    private volatile KieContainer kieContainer;
+
+    @PostConstruct
+    public void init() throws IOException {
+        reload();
+    }
+
+    public synchronized void reload() throws IOException {
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
 
         File folder = new File(rulesFolderPath);
@@ -32,36 +40,39 @@ public class DroolsConfig {
 
         if (files != null) {
             for (File file : files) {
-                kieFileSystem.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
+                kieFileSystem.write(
+                        ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE)
+                );
             }
         }
 
         log.info("External rule resources loaded successfully.");
 
-        return kieFileSystem;
-    }
-
-//    private KieFileSystem getKieFileSystem() throws IOException {
-//        KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-//        kieFileSystem.write(ResourceFactory.newClassPathResource("rules/rules.drl").setResourceType(ResourceType.DRL));
-//        log.info("Class path resource loaded successfully.");
-//        return kieFileSystem;
-//    }
-
-    @Bean
-    public KieContainer getKieContainer() throws IOException {
-        log.info("Container created");
         getKieRepository();
-        KieBuilder kb = kieServices.newKieBuilder(getKieFileSystem());
+
+        KieBuilder kb = kieServices.newKieBuilder(kieFileSystem);
+
         kb.buildAll();
 
-        if (kb.getResults().hasMessages(org.kie.api.builder.Message.Level.ERROR)) {
-            throw new RuntimeException("Build Errors:\n" + kb.getResults().toString());
+        if (kb.getResults().hasMessages(
+                org.kie.api.builder.Message.Level.ERROR)) {
+            throw new RuntimeException("Build Errors:\n" + kb.getResults()
+            );
         }
 
         KieModule kieModule = kb.getKieModule();
-        return kieServices.newKieContainer(kieModule.getReleaseId());
 
+        this.kieContainer = kieServices.newKieContainer(kieModule.getReleaseId());
+    }
+
+    @Bean
+    public KieContainer getKieContainer() {
+        return this.kieContainer;
+    }
+
+    @Bean
+    public KieSession getKieSession() {
+        return this.kieContainer.newKieSession();
     }
 
     private void getKieRepository() {
@@ -72,11 +83,5 @@ public class DroolsConfig {
                 return kieRepository.getDefaultReleaseId();
             }
         });
-    }
-
-    @Bean
-    public KieSession getKieSession() throws IOException {
-        log.debug("Session created");
-        return getKieContainer().newKieSession();
     }
 }

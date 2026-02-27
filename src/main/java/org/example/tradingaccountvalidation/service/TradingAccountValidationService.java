@@ -3,65 +3,51 @@ package org.example.tradingaccountvalidation.service;
 import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleDiagnosisInterface;
+import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.example.tradingaccountvalidation.repo.TradingAccountValidationInterface;
-import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class TradingAccountValidationService implements TradingAccountValidationInterface {
-    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationService.class);
+    private final RuleEngineInterface engine;
+    private final RuleDiagnosisInterface diagnosis;
+    private final RuleMetadataLoaderInterface metadataLoader;
 
-    @Autowired
-    private KieContainer kieContainer;
+    public TradingAccountValidationService(
+            RuleEngineInterface engine,
+            RuleDiagnosisInterface diagnosis,
+            RuleMetadataLoaderInterface metadataLoader) {
 
-    @Autowired
-    private RuleDiagnosisInterface diagnosticService;
-
-    @Autowired
-    private RuleMetadataLoaderInterface metadataLoader;
+        this.engine = engine;
+        this.diagnosis = diagnosis;
+        this.metadataLoader = metadataLoader;
+    }
 
     @Override
     public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
-        String customerId = snapshot.getString("/account/customerId");
-
-        log.info("Account object received for id: {}", customerId);
-
         KieSession session = null;
 
         try {
-            session = kieContainer.newKieSession();
+            session = engine.newSession();
             session.insert(snapshot);
 
-            int firedRule = session.fireAllRules();
-            log.info("Rules fired: {}", firedRule);
+            int fired = session.fireAllRules();
 
-            if (firedRule == 0) {
+            if (fired == 0) {
                 String from = snapshot.getString("/account/statusFrom");
                 String to = snapshot.getString("/account/statusTo");
 
                 List<RuleMeta> rules = metadataLoader.getByTransition(from, to);
-                List<Map<String, Object>> diagnostics = diagnosticService.diagnose(snapshot, rules);
+                List<Map<String, Object>> reasons = diagnosis.diagnose(snapshot, rules);
 
                 snapshot.set("/account/output/evaluationStatus", "No Valid Rule Applicable");
-                snapshot.set("/account/output/statusFrom", from);
-                snapshot.set("/account/output/statusTo", to);
-                snapshot.set("/account/output/reasons", diagnostics);
+                snapshot.set("/account/output/reasons", reasons);
             }
-            return snapshot;
-
-        } catch (Exception e) {
-            log.error("Validation error for id: {}", customerId, e);
-
-            snapshot.set("/account/output/evaluationStatus", "ERROR");
-            snapshot.set("/account/output/message", e.getMessage());
-
             return snapshot;
         } finally {
             if (session != null) {

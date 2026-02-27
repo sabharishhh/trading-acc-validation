@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DynamicAccountSnapshot {
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private ObjectNode root;
 
