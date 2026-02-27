@@ -6,103 +6,118 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.tradingaccountvalidation.model.ConditionMeta;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
-import org.springframework.core.io.ClassPathResource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.*;
 
 @Component
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
+
+    @Value("${rules.folder}")
+    private String rulesFolderPath;
+
     private final List<RuleMeta> allRules = new ArrayList<>();
 
     @Override
     @PostConstruct
     public void load() throws Exception {
-        InputStream file = new ClassPathResource("rules/rules_dynamic.xlsx").getInputStream();
 
-        Workbook workbook = new XSSFWorkbook(file);
-        Sheet sheet = workbook.getSheetAt(0);
+        allRules.clear();
 
-        Row header = null;
+        File folder = new File(rulesFolderPath);
 
-        // Find JSON path header
-        for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+        if (!folder.exists() || !folder.isDirectory()) {
+            throw new RuntimeException("Rules folder not found: " + rulesFolderPath);
+        }
 
-            Row r = sheet.getRow(i);
-            if (r == null) continue;
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
 
-            for (Cell c : r) {
-                String val = getCellValue(c);
-                if (val != null && val.startsWith("/account/")) {
-                    header = r;
-                    break;
+        if (files == null) return;
+
+        for (File file : files) {
+
+            try (InputStream input = new FileInputStream(file);
+                 Workbook workbook = new XSSFWorkbook(input)) {
+
+                Sheet sheet = workbook.getSheetAt(0);
+
+                Row header = null;
+
+                for (int i = 0; i <= sheet.getLastRowNum(); i++) {
+
+                    Row r = sheet.getRow(i);
+                    if (r == null) continue;
+
+                    for (Cell c : r) {
+                        String val = getCellValue(c);
+                        if (val != null && val.startsWith("/account/")) {
+                            header = r;
+                            break;
+                        }
+                    }
+                    if (header != null) break;
+                }
+
+                if (header == null) continue;
+
+                Map<Integer, String> columnPathMap = new HashMap<>();
+
+                for (Cell cell : header) {
+                    String headerValue = getCellValue(cell);
+
+                    if (headerValue != null && headerValue.startsWith("/account/")) {
+                        columnPathMap.put(cell.getColumnIndex(), headerValue);
+                    }
+                }
+
+                Row descriptionRow = sheet.getRow(header.getRowNum() + 1);
+                Map<Integer, String> columnDescriptionMap = new HashMap<>();
+
+                if (descriptionRow != null) {
+                    for (Cell cell : descriptionRow) {
+                        String description = getCellValue(cell);
+
+                        if (description != null && !description.isBlank()) {
+                            columnDescriptionMap.put(cell.getColumnIndex(), description);
+                        }
+                    }
+                }
+
+                for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
+                    Row row = sheet.getRow(i);
+
+                    if (row == null)
+                        continue;
+
+                    String ruleId = getCellValue(row.getCell(0));
+
+                    if (ruleId == null || ruleId.isBlank())
+                        continue;
+
+                    String agenda = getCellValue(row.getCell(1));
+                    String from = getCellValue(row.getCell(2));
+                    String to = getCellValue(row.getCell(3));
+
+                    RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
+
+                    for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
+
+                        Cell conditionCell = row.getCell(entry.getKey());
+                        String expected = getCellValue(conditionCell);
+
+                        if (expected != null && !expected.isBlank()) {
+                            String template = columnDescriptionMap.get(entry.getKey());
+                            meta.getConditions().add(new ConditionMeta(entry.getValue(), expected, template));
+                        }
+                    }
+                    allRules.add(meta);
                 }
             }
-            if (header != null) break;
         }
-
-        if (header == null) {
-            throw new RuntimeException("JSON path header not found");
-        }
-
-        // column -> JSON path map
-        Map<Integer, String> columnPathMap = new HashMap<>();
-
-        for (Cell cell : header) {
-            String headerValue = getCellValue(cell);
-
-            if (headerValue != null && headerValue.startsWith("/account/")) {
-                columnPathMap.put(cell.getColumnIndex(), headerValue);
-            }
-        }
-
-        // Read description row
-        Row descriptionRow = sheet.getRow(header.getRowNum() + 1);
-        Map<Integer, String> columnDescriptionMap = new HashMap<>();
-
-        if (descriptionRow != null) {
-            for (Cell cell : descriptionRow) {
-                String description = getCellValue(cell);
-
-                if (description != null && !description.isBlank()) {
-                    columnDescriptionMap.put(cell.getColumnIndex(), description);
-                }
-            }
-        }
-
-        // Load rule rows
-        for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
-            Row row = sheet.getRow(i);
-
-            if (row == null)
-                continue;
-
-            String ruleId = getCellValue(row.getCell(0));
-
-            if (ruleId == null || ruleId.isBlank())
-                continue;
-
-            String agenda = getCellValue(row.getCell(1));
-            String from = getCellValue(row.getCell(2));
-            String to = getCellValue(row.getCell(3));
-
-            RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
-
-            // Extract condition columns
-            for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
-
-                Cell conditionCell = row.getCell(entry.getKey());
-                String expected = getCellValue(conditionCell);
-
-                if (expected != null && !expected.isBlank()) {
-                    String template = columnDescriptionMap.get(entry.getKey());
-                    meta.getConditions().add(new ConditionMeta(entry.getValue(), expected, template));
-                }
-            }
-            allRules.add(meta);
-        }
-        workbook.close();
-        file.close();
     }
 
     @Override

@@ -8,9 +8,11 @@ import org.kie.api.runtime.KieSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.kie.internal.io.ResourceFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.io.File;
 import java.io.IOException;
 
 @Configuration
@@ -19,10 +21,25 @@ public class DroolsConfig {
 
     private final KieServices kieServices = KieServices.Factory.get();
 
+    @Value("${rules.folder}")
+    private String rulesFolderPath;
+
     private KieFileSystem getKieFileSystem() throws IOException {
         KieFileSystem kieFileSystem = kieServices.newKieFileSystem();
-        kieFileSystem.write(ResourceFactory.newClassPathResource("rules/rules_dynamic.xlsx").setResourceType(ResourceType.DTABLE));
-        log.info("Class path resource loaded successfully.");
+
+        File folder = new File(rulesFolderPath);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
+
+        if (files != null) {
+            for (File file : files) {
+                kieFileSystem.write(
+                        ResourceFactory.newFileResource(file)
+                                .setResourceType(ResourceType.DTABLE)
+                );
+            }
+        }
+
+        log.info("External rule resources loaded successfully.");
 
         return kieFileSystem;
     }
