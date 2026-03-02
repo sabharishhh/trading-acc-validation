@@ -1,6 +1,5 @@
 package org.example.tradingaccountvalidation.service;
 
-import jakarta.annotation.PostConstruct;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.tradingaccountvalidation.model.ConditionMeta;
@@ -23,9 +22,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     private final List<RuleMeta> allRules = new ArrayList<>();
 
     @Override
-    @PostConstruct
-    public void load() throws Exception {
-
+    public synchronized void reload() throws Exception {
         allRules.clear();
 
         File folder = new File(rulesFolderPath);
@@ -40,15 +37,12 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
         for (File file : files) {
 
-            try (InputStream input = new FileInputStream(file);
-                 Workbook workbook = new XSSFWorkbook(input)) {
-
+            try (InputStream input = new FileInputStream(file); Workbook workbook = new XSSFWorkbook(input)) {
                 Sheet sheet = workbook.getSheetAt(0);
 
                 Row header = null;
 
                 for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-
                     Row r = sheet.getRow(i);
                     if (r == null) continue;
 
@@ -68,7 +62,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
                 for (Cell cell : header) {
                     String headerValue = getCellValue(cell);
-
                     if (headerValue != null && headerValue.startsWith("/account/")) {
                         columnPathMap.put(cell.getColumnIndex(), headerValue);
                     }
@@ -80,7 +73,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 if (descriptionRow != null) {
                     for (Cell cell : descriptionRow) {
                         String description = getCellValue(cell);
-
                         if (description != null && !description.isBlank()) {
                             columnDescriptionMap.put(cell.getColumnIndex(), description);
                         }
@@ -89,14 +81,10 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
                 for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
                     Row row = sheet.getRow(i);
-
-                    if (row == null)
-                        continue;
+                    if (row == null) continue;
 
                     String ruleId = getCellValue(row.getCell(0));
-
-                    if (ruleId == null || ruleId.isBlank())
-                        continue;
+                    if (ruleId == null || ruleId.isBlank()) continue;
 
                     String agenda = getCellValue(row.getCell(1));
                     String from = getCellValue(row.getCell(2));
@@ -105,15 +93,16 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                     RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
 
                     for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
-
                         Cell conditionCell = row.getCell(entry.getKey());
                         String expected = getCellValue(conditionCell);
 
                         if (expected != null && !expected.isBlank()) {
                             String template = columnDescriptionMap.get(entry.getKey());
-                            meta.getConditions().add(new ConditionMeta(entry.getValue(), expected, template));
+                            meta.getConditions().add(new ConditionMeta(entry.getValue(), expected, template)
+                            );
                         }
                     }
+
                     allRules.add(meta);
                 }
             }
@@ -124,8 +113,9 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     public List<RuleMeta> getByTransition(String from, String to) {
 
         return allRules.stream()
-                .filter(r -> Objects.equals(r.getStatusFrom(), from) && Objects.equals(r.getStatusTo(), to))
-                .toList();
+                .filter(r ->
+                        Objects.equals(r.getStatusFrom(), from) && Objects.equals(r.getStatusTo(), to)
+                ).toList();
     }
 
     private String getCellValue(Cell cell) {

@@ -29,11 +29,37 @@ public class RuleEngineService implements RuleEngineInterface {
 
     @Override
     public synchronized void reloadRules() {
+        File folder = new File(rulesFolder);
+        File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
+
+        buildAndReplace(files);
+    }
+
+    @Override
+    public void validateRuleFiles(File[] files) {
+        buildOnly(files);
+    }
+
+    private void buildOnly(File[] files) {
         KieServices ks = KieServices.Factory.get();
         KieFileSystem kfs = ks.newKieFileSystem();
 
-        File folder = new File(rulesFolder);
-        File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
+        if (files != null) {
+            for (File file : files) {
+                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
+            }
+        }
+
+        KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
+
+        if (builder.getResults().hasMessages(Message.Level.ERROR)) {
+            throw new RuntimeException("Rule validation failed: " + builder.getResults().getMessages());
+        }
+    }
+
+    private void buildAndReplace(File[] files) {
+        KieServices ks = KieServices.Factory.get();
+        KieFileSystem kfs = ks.newKieFileSystem();
 
         if (files != null) {
             for (File file : files) {
