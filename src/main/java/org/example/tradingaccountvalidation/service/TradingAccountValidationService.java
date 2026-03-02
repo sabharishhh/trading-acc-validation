@@ -38,9 +38,18 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
         try {
             session = engine.newSession();
+            session.addEventListener(new org.kie.api.event.rule.DefaultAgendaEventListener() {
+
+                @Override
+                public void afterMatchFired(org.kie.api.event.rule.AfterMatchFiredEvent event) {
+                    String ruleName = event.getMatch().getRule().getName();
+                    log.info("Rule fired: {}", ruleName);
+                }
+            });
+
             session.insert(snapshot);
 
-            int fired = session.fireAllRules();
+            int fired = session.fireAllRules();;
             log.info("Rules fired: " + fired);
 
             if (fired == 0) {

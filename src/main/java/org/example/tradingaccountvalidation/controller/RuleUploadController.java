@@ -23,6 +23,9 @@ public class RuleUploadController {
     @Value("${rules.folder}")
     private String rulesFolder;
 
+    @Value("${rules.temp.folder")
+    private String rulesTempFolder;
+
     public RuleUploadController(RuleStorageInterface storage, RuleEngineInterface engine, RuleMetadataLoaderInterface metadataLoader) {
         this.storage = storage;
         this.engine = engine;
@@ -35,7 +38,7 @@ public class RuleUploadController {
             return ResponseEntity.badRequest().body("No files provided");
         }
 
-        Path tempDir = Paths.get("rules_temp");
+        Path tempDir = Paths.get(rulesTempFolder);
 
         try {
             if (Files.exists(tempDir)) {
@@ -75,11 +78,7 @@ public class RuleUploadController {
             }
 
             for (File file : tempFiles) {
-                Files.move(
-                        file.toPath(),
-                        rulesDir.resolve(file.getName()),
-                        StandardCopyOption.REPLACE_EXISTING
-                );
+                Files.move(file.toPath(), rulesDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
             }
 
             engine.reloadRules();
