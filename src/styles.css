@@ -160,11 +160,12 @@ body {
 /* Drop Zone */
 
 .drop-zone {
+  display: block;
   position: relative;
   border: 2px dashed #107c41;
   border-radius: 16px;
   background: #f4faf7;
-  padding: 60px 20px;   /* THIS WAS BROKEN BEFORE */
+  padding: 60px 20px;
   text-align: center;
   cursor: pointer;
   transition: 0.25s ease;
