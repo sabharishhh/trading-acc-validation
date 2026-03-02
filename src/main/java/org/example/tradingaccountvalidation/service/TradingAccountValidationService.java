@@ -22,11 +22,7 @@ public class TradingAccountValidationService implements TradingAccountValidation
     private final RuleMetadataLoaderInterface metadataLoader;
     private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationController.class);
 
-    public TradingAccountValidationService(
-            RuleEngineInterface engine,
-            RuleDiagnosisInterface diagnosis,
-            RuleMetadataLoaderInterface metadataLoader) {
-
+    public TradingAccountValidationService(RuleEngineInterface engine, RuleDiagnosisInterface diagnosis, RuleMetadataLoaderInterface metadataLoader) {
         this.engine = engine;
         this.diagnosis = diagnosis;
         this.metadataLoader = metadataLoader;

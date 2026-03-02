@@ -91,7 +91,6 @@ public class RuleUploadController {
 
             return ResponseEntity.ok(files.length + " file(s) uploaded safely and rules reloaded"
             );
-
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
         }

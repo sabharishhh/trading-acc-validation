@@ -8,7 +8,6 @@ import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -29,11 +28,9 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
     @Override
     public synchronized void reload() throws Exception {
-
         allRules.clear();
 
         File folder = new File(rulesFolderPath);
-
         if (!folder.exists()) {
             folder.mkdirs();
         }
@@ -43,7 +40,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         }
 
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
-
         if (files == null || files.length == 0) {
             return;
         }
@@ -54,9 +50,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     }
 
     private void loadFile(File file) throws Exception {
-
-        try (InputStream input = new FileInputStream(file);
-             Workbook workbook = new XSSFWorkbook(input)) {
+        try (InputStream input = new FileInputStream(file); Workbook workbook = new XSSFWorkbook(input)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null) return;
@@ -64,7 +58,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             Row header = null;
 
             for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-
                 Row r = sheet.getRow(i);
                 if (r == null) continue;
 
@@ -102,7 +95,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             }
 
             for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
-
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
 
@@ -116,7 +108,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
 
                 for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
-
                     Cell conditionCell = row.getCell(entry.getKey());
                     String expected = getCellValue(conditionCell);
 
@@ -127,7 +118,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                         );
                     }
                 }
-
                 allRules.add(meta);
             }
         }
@@ -140,8 +130,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 .filter(r ->
                         Objects.equals(r.getStatusFrom(), from)
                                 && Objects.equals(r.getStatusTo(), to)
-                )
-                .toList();
+                ).toList();
     }
 
     private String getCellValue(Cell cell) {
