@@ -1,0 +1,275 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #0e5e31, #107c41);
+}
+
+.app {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #0f3f25;
+  color: white;
+  padding: 20px;
+}
+
+.logo {
+  margin-bottom: 30px;
+  font-weight: 600;
+}
+
+.nav-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  transition: background 0.2s ease;
+}
+
+.nav-item:hover {
+  background: #1b6e3d;
+}
+
+.nav-item.active {
+  background: #21a366;
+}
+
+.main {
+  flex: 1;
+  background: #f4faf6;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 60px 40px;
+  overflow-y: auto;
+}
+
+.dashboard h2,
+.file-grid h2 {
+  margin-bottom: 20px;
+  color: #107c41;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.kpi-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.kpi-title {
+  font-size: 14px;
+  color: gray;
+}
+
+.kpi-value {
+  font-size: 26px;
+  font-weight: bold;
+  color: #107c41;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.file-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin: 10px 0;
+  color: gray;
+}
+
+.agendas {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.agenda-tag {
+  background: #e6f4ec;
+  color: #107c41;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.badge {
+  margin-top: 15px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.badge.verified {
+  background: #d4edda;
+  color: #2e7d32;
+}
+
+.badge.pending {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge.warning {
+  background: #f8d7da;
+  color: #c62828;
+}
+/* ================= Upload Section ================= */
+
+.upload-card {
+  width: 720px;
+  max-width: 100%;
+  background: white;
+  border-radius: 20px;
+  padding: 48px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  margin: 0 auto;
+}
+
+/* Title */
+
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 30px;
+  color: #107c41;
+}
+
+/* Drop Zone */
+
+.drop-zone {
+  position: relative;
+  border: 2px dashed #107c41;
+  border-radius: 16px;
+  background: #f4faf7;
+  padding: 60px 20px;   /* THIS WAS BROKEN BEFORE */
+  text-align: center;
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.drop-zone:hover {
+  background: #e8f5ed;
+  transform: translateY(-3px);
+}
+
+.drop-zone.drag-active {
+  background: #dff3e8;
+  border-color: #0e6e39;
+  transform: translateY(-3px);
+}
+
+.drop-zone input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.drop-inner {
+  pointer-events: none;
+  color: #107c41;
+}
+
+.drop-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+
+.drop-sub {
+  font-size: 14px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+/* Selected Files */
+
+.selected-files {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.file-chip {
+  background: #107c41;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.file-chip button {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Button */
+
+.primary-btn {
+  margin-top: 30px;
+  width: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: none;
+  background: #107c41;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #0e6e39;
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Message */
+
+.upload-message {
+  margin-top: 20px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.upload-message.success {
+  color: #107c41;
+}
+
+.upload-message.error {
+  color: #c62828;
+}
