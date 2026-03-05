@@ -1,6 +1,7 @@
 package org.example.tradingaccountvalidation.controller;
 
 import org.example.tradingaccountvalidation.model.RuleMeta;
+import org.example.tradingaccountvalidation.model.RuleTableRow;
 import org.springframework.beans.factory.annotation.Value;
 import org.example.tradingaccountvalidation.model.FileInfo;
 import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
@@ -50,8 +51,8 @@ public class RuleDashboardController {
         return metadataLoader.getAllRules();
     }
 
-    @GetMapping("/active")
-    public List<RuleMeta> getActiveRules() {
-        return metadataLoader.getAllRules();
+    @GetMapping("/table")
+    public List<RuleTableRow> getRuleTable() {
+        return metadataLoader.getRuleTable();
     }
 }

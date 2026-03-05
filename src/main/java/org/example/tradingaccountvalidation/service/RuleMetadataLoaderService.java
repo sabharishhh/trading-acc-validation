@@ -5,6 +5,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.example.tradingaccountvalidation.model.ConditionMeta;
 import org.example.tradingaccountvalidation.model.RuleMeta;
+import org.example.tradingaccountvalidation.model.RuleTableRow;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -124,6 +125,31 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 allRules.add(meta);
             }
         }
+    }
+
+    @Override
+    public List<RuleTableRow> getRuleTable() {
+        List<RuleTableRow> result = new ArrayList<>();
+
+        for (RuleMeta rule : allRules) {
+            Map<String,String> conditionMap = new LinkedHashMap<>();
+
+            for (ConditionMeta condition : rule.getConditions()) {
+                String key = condition.path().replace("/account/","");
+                conditionMap.put(key, condition.expected());
+            }
+
+            result.add(
+                    new RuleTableRow(
+                            rule.getRuleId(),
+                            rule.getStatusFrom(),
+                            rule.getStatusTo(),
+                            rule.getSourceFile(),
+                            conditionMap
+                    )
+            );
+        }
+        return result;
     }
 
     @Override
