@@ -1,6 +1,7 @@
 package org.example.tradingaccountvalidation.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.kie.api.KieServices;
 import org.kie.api.builder.*;
@@ -12,7 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
+
 
 @Service
 public class RuleEngineService implements RuleEngineInterface {
@@ -21,6 +24,11 @@ public class RuleEngineService implements RuleEngineInterface {
     private String rulesFolder;
 
     private final AtomicReference<KieContainer> containerRef = new AtomicReference<>();
+
+    @Getter
+    private String lastBuildStatus = "UNKNOWN";
+    @Getter
+    private String lastReloadTime = "";
 
     @PostConstruct
     public void init() {
@@ -46,14 +54,17 @@ public class RuleEngineService implements RuleEngineInterface {
 
         if (files != null) {
             for (File file : files) {
-                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
+                kfs.write(ResourceFactory.newFileResource(file)
+                        .setResourceType(ResourceType.DTABLE));
             }
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
 
         if (builder.getResults().hasMessages(Message.Level.ERROR)) {
-            throw new RuntimeException("Rule validation failed: " + builder.getResults().getMessages());
+            throw new RuntimeException(
+                    "Rule validation failed: " + builder.getResults().getMessages()
+            );
         }
     }
 
@@ -63,22 +74,32 @@ public class RuleEngineService implements RuleEngineInterface {
 
         if (files != null) {
             for (File file : files) {
-                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
+                kfs.write(ResourceFactory.newFileResource(file)
+                        .setResourceType(ResourceType.DTABLE));
             }
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
 
         if (builder.getResults().hasMessages(Message.Level.ERROR)) {
-            throw new RuntimeException("Rule build failed: " + builder.getResults().getMessages());
+            lastBuildStatus = "FAILED";
+            throw new RuntimeException(
+                    "Rule build failed: " + builder.getResults().getMessages()
+            );
         }
 
-        KieContainer newContainer = ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+        KieContainer newContainer =
+                ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
+
         containerRef.set(newContainer);
+
+        lastBuildStatus = "SUCCESS";
+        lastReloadTime = LocalDateTime.now().toString();
     }
 
     @Override
     public KieSession newSession() {
         return containerRef.get().newKieSession();
     }
+
 }

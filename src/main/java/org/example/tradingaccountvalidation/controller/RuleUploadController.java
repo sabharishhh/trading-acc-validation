@@ -2,6 +2,7 @@ package org.example.tradingaccountvalidation.controller;
 
 import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
+import org.example.tradingaccountvalidation.repo.RuleRegistryInterface;
 import org.example.tradingaccountvalidation.repo.RuleStorageInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -13,23 +14,26 @@ import java.nio.file.*;
 import java.util.Comparator;
 import java.util.Objects;
 
+@CrossOrigin(origins = "http://localhost:3000")
 @RestController
 @RequestMapping("/rules")
 public class RuleUploadController {
     private final RuleStorageInterface storage;
     private final RuleEngineInterface engine;
     private final RuleMetadataLoaderInterface metadataLoader;
+    private final RuleRegistryInterface registry;
 
     @Value("${rules.folder}")
     private String rulesFolder;
 
-    @Value("${rules.temp.folder")
+    @Value("${rules.temp.folder}")
     private String rulesTempFolder;
 
-    public RuleUploadController(RuleStorageInterface storage, RuleEngineInterface engine, RuleMetadataLoaderInterface metadataLoader) {
+    public RuleUploadController(RuleStorageInterface storage, RuleEngineInterface engine, RuleMetadataLoaderInterface metadataLoader, RuleRegistryInterface registry) {
         this.storage = storage;
         this.engine = engine;
         this.metadataLoader = metadataLoader;
+        this.registry = registry;
     }
 
     @PostMapping("/upload")
@@ -83,6 +87,7 @@ public class RuleUploadController {
 
             engine.reloadRules();
             metadataLoader.reload();
+            registry.refresh(rulesFolder, metadataLoader.getAllRules(), true);
 
             Files.walk(tempDir)
                     .sorted(Comparator.reverseOrder())

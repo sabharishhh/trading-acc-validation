@@ -8,6 +8,7 @@ import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -50,7 +51,8 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
     }
 
     private void loadFile(File file) throws Exception {
-        try (InputStream input = new FileInputStream(file); Workbook workbook = new XSSFWorkbook(input)) {
+        try (InputStream input = new FileInputStream(file);
+             Workbook workbook = new XSSFWorkbook(input)) {
 
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null) return;
@@ -105,7 +107,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 String from = getCellValue(row.getCell(2));
                 String to = getCellValue(row.getCell(3));
 
-                RuleMeta meta = new RuleMeta(ruleId, agenda, from, to);
+                RuleMeta meta = new RuleMeta(ruleId, agenda, from, to, file.getName());
 
                 for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
                     Cell conditionCell = row.getCell(entry.getKey());
@@ -118,6 +120,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                         );
                     }
                 }
+
                 allRules.add(meta);
             }
         }
@@ -125,12 +128,16 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
     @Override
     public List<RuleMeta> getByTransition(String from, String to) {
-
         return allRules.stream()
                 .filter(r ->
                         Objects.equals(r.getStatusFrom(), from)
                                 && Objects.equals(r.getStatusTo(), to)
                 ).toList();
+    }
+
+    @Override
+    public List<RuleMeta> getAllRules() {
+        return new ArrayList<>(allRules);
     }
 
     private String getCellValue(Cell cell) {
