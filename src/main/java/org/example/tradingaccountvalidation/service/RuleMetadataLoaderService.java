@@ -17,7 +17,6 @@ import java.util.*;
 
 @Component
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
-
     @Value("${rules.folder}")
     private String rulesFolderPath;
 

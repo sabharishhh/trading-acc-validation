@@ -4,7 +4,6 @@ import org.example.tradingaccountvalidation.model.FileInfo;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleRegistryInterface;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -12,7 +11,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class RuleRegistryService implements RuleRegistryInterface {
-
     private final Map<String, FileInfo> fileInfoMap = new HashMap<>();
 
     private int totalRules = 0;
@@ -22,10 +20,7 @@ public class RuleRegistryService implements RuleRegistryInterface {
     private boolean lastBuildSuccess = false;
 
     @Override
-    public synchronized void refresh(String rulesFolderPath,
-                                     List<RuleMeta> allRules,
-                                     boolean buildStatus) {
-
+    public synchronized void refresh(String rulesFolderPath, List<RuleMeta> allRules, boolean buildStatus) {
         fileInfoMap.clear();
 
         this.lastBuildSuccess = buildStatus;
@@ -63,9 +58,8 @@ public class RuleRegistryService implements RuleRegistryInterface {
 
                 info.setWarnings(0);
 
-                // Convert boolean to UI-friendly string
+                // Convert boolean to string
                 info.setStatus(buildStatus ? "VERIFIED" : "FAILED");
-
                 info.setLastModified(LocalDateTime.now().toString());
 
                 fileInfoMap.put(fileName, info);
@@ -73,7 +67,6 @@ public class RuleRegistryService implements RuleRegistryInterface {
         } else {
             totalFiles = 0;
         }
-
         lastReloadTime = LocalDateTime.now().toString();
     }
 
@@ -84,7 +77,6 @@ public class RuleRegistryService implements RuleRegistryInterface {
 
     @Override
     public Map<String, Object> getStats() {
-
         Map<String, Object> stats = new HashMap<>();
 
         stats.put("totalFiles", totalFiles);

@@ -1,6 +1,7 @@
 package org.example.tradingaccountvalidation.service;
 
-import org.example.tradingaccountvalidation.controller.TradingAccountValidationController;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleDiagnosisInterface;
@@ -15,18 +16,14 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
+@Data
+@AllArgsConstructor
 @Service
 public class TradingAccountValidationService implements TradingAccountValidationInterface {
     private final RuleEngineInterface engine;
     private final RuleDiagnosisInterface diagnosis;
     private final RuleMetadataLoaderInterface metadataLoader;
-    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationController.class);
-
-    public TradingAccountValidationService(RuleEngineInterface engine, RuleDiagnosisInterface diagnosis, RuleMetadataLoaderInterface metadataLoader) {
-        this.engine = engine;
-        this.diagnosis = diagnosis;
-        this.metadataLoader = metadataLoader;
-    }
+    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationService.class);
 
     @Override
     public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
@@ -45,8 +42,8 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
             session.insert(snapshot);
 
-            int fired = session.fireAllRules();;
-            log.info("Rules fired: " + fired);
+            int fired = session.fireAllRules();
+            log.info("Rules fired: {}", fired);
 
             if (fired == 0) {
                 String from = snapshot.getString("/account/statusFrom");

@@ -14,7 +14,6 @@ public class DynamicAccountSnapshot {
     private static final Logger log = LoggerFactory.getLogger(DynamicAccountSnapshot.class);
 
     public DynamicAccountSnapshot(JsonNode node) {
-
         if (node == null || !node.isObject()) {
             throw new IllegalArgumentException("Root JSON must be an object");
         }
@@ -25,28 +24,6 @@ public class DynamicAccountSnapshot {
 
         this.root = (ObjectNode) node;
     }
-
-    public DynamicAccountSnapshot(String jsonPayload) {
-        try {
-            JsonNode parsed = MAPPER.readTree(jsonPayload);
-            initialize(parsed);
-        } catch (Exception e) {
-            throw new RuntimeException("Invalid JSON payload", e);
-        }
-    }
-
-    private void initialize(JsonNode parsed) {
-        if (parsed == null || !parsed.isObject()) {
-            throw new IllegalArgumentException("Root JSON must be an object");
-        }
-
-        if (parsed.has("raw") && parsed.get("raw").isObject()) {
-            parsed = parsed.get("raw");
-        }
-
-        this.root = (ObjectNode) parsed;
-    }
-
 
     public Object get(String path) {
         JsonNode node = navigate(path);
@@ -69,28 +46,7 @@ public class DynamicAccountSnapshot {
         return val != null ? val.toString() : null;
     }
 
-    public Double getDouble(String path) {
-        Object val = get(path);
-        return (val instanceof Number) ? ((Number) val).doubleValue() : null;
-    }
-
-    public Long getLong(String path) {
-        Object val = get(path);
-        return (val instanceof Number) ? ((Number) val).longValue() : null;
-    }
-
-    public Integer getInt(String path) {
-        Object val = get(path);
-        return (val instanceof Number) ? ((Number) val).intValue() : null;
-    }
-
-    public Boolean getBoolean(String path) {
-        Object val = get(path);
-        return (val instanceof Boolean) ? (Boolean) val : null;
-    }
-
     public void set(String path, Object value) {
-
         String[] parts = clean(path).split("/");
         ObjectNode current = root;
 
@@ -123,7 +79,6 @@ public class DynamicAccountSnapshot {
     }
 
     private JsonNode navigate(String path) {
-
         String[] parts = clean(path).split("/");
         JsonNode current = root;
         for (String part : parts) {
@@ -134,38 +89,9 @@ public class DynamicAccountSnapshot {
         return current;
     }
 
-    public void appendToArray(String path, String value) {
-        String[] parts = clean(path).split("/");
-        ObjectNode current = root;
-
-        for (int i = 0; i < parts.length - 1; i++) {
-            JsonNode next = current.get(parts[i]);
-            if (next == null || !next.isObject()) {
-                next = MAPPER.createObjectNode();
-                current.set(parts[i], next);
-            }
-            current = (ObjectNode) next;
-        }
-
-        String last = parts[parts.length - 1];
-
-        JsonNode existing = current.get(last);
-
-        if (existing == null || !existing.isArray()) {
-            current.putArray(last).add(value);
-        } else {
-            ((com.fasterxml.jackson.databind.node.ArrayNode) existing).add(value);
-        }
-    }
-
     private String clean(String path) {
         if (path == null) return "";
         return path.startsWith("/") ? path.substring(1) : path;
-    }
-
-    public boolean exists(String path) {
-        JsonNode node = navigate(path);
-        return node != null && !node.isMissingNode() && !node.isNull();
     }
 
     @JsonValue

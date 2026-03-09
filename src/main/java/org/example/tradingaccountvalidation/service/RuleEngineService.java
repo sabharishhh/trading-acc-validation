@@ -11,7 +11,6 @@ import org.kie.api.runtime.KieSession;
 import org.kie.internal.io.ResourceFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,7 +18,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class RuleEngineService implements RuleEngineInterface {
-
     @Value("${rules.folder}")
     private String rulesFolder;
 
@@ -101,5 +99,4 @@ public class RuleEngineService implements RuleEngineInterface {
     public KieSession newSession() {
         return containerRef.get().newKieSession();
     }
-
 }

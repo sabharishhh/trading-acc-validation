@@ -1,6 +1,5 @@
 package org.example.tradingaccountvalidation.service;
 
-import org.example.tradingaccountvalidation.controller.TradingAccountValidationController;
 import org.example.tradingaccountvalidation.repo.RuleStorageInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,8 @@ import java.util.Objects;
 public class RuleStorageService implements RuleStorageInterface {
     @Value("${rules.folder}")
     private String rulesFolder;
-    private static final Logger log = LoggerFactory.getLogger(TradingAccountValidationController.class);
+
+    private static final Logger log = LoggerFactory.getLogger(RuleStorageService.class);
 
     private static final long MAX_SIZE = 5 * 1024 * 1024;
 
@@ -34,7 +34,7 @@ public class RuleStorageService implements RuleStorageInterface {
         String name = file.getOriginalFilename();
 
         if (name == null || !name.toLowerCase().endsWith(".xlsx")) {
-            log.info("Invalid file type, .xlsx files only allowed");
+            log.info("Invalid file type, .xlsx files are only allowed");
             throw new RuntimeException("Only .xlsx files allowed");
         }
     }

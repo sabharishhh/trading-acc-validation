@@ -31,13 +31,7 @@ public class RuleDashboardController {
     }
 
     @GetMapping("/files")
-    public List<FileInfo> getFiles() throws Exception {
-        engine.reloadRules();
-        metadataLoader.reload();
-        registry.refresh(rulesFolder,
-                metadataLoader.getAllRules(),
-                true);
-
+    public List<FileInfo> getFiles() {
         return registry.getFiles();
     }
 
