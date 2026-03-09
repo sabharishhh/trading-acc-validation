@@ -4,11 +4,9 @@ import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.model.RuleTableRow;
 import org.springframework.beans.factory.annotation.Value;
 import org.example.tradingaccountvalidation.model.FileInfo;
-import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
 import org.example.tradingaccountvalidation.service.RuleRegistryService;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 
@@ -16,17 +14,14 @@ import java.util.Map;
 @RequestMapping("/rules")
 @CrossOrigin
 public class RuleDashboardController {
-
     private final RuleRegistryService registry;
-    private final RuleEngineInterface engine;
     private final RuleMetadataLoaderInterface metadataLoader;
 
     @Value("${rules.folder}")
     private String rulesFolder;
 
-    public RuleDashboardController(RuleEngineInterface engine, RuleMetadataLoaderInterface metadataLoader, RuleRegistryService registry) {
+    public RuleDashboardController(RuleMetadataLoaderInterface metadataLoader, RuleRegistryService registry) {
         this.registry = registry;
-        this.engine = engine;
         this.metadataLoader = metadataLoader;
     }
 

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.*;
-
 import static java.nio.file.StandardWatchEventKinds.*;
 
 @Component
@@ -32,7 +31,7 @@ public class RuleFolderWatcherService {
     @PostConstruct
     public void startWatcher() {
         try {
-            log.info("Performing initial rule load...");
+            log.info("Loading rules at application startup...");
 
             engine.reloadRules();
             metadataLoader.reload();
@@ -55,11 +54,9 @@ public class RuleFolderWatcherService {
 
     private void watch() {
         try {
-            WatchService watchService =
-                    FileSystems.getDefault().newWatchService();
+            WatchService watchService = FileSystems.getDefault().newWatchService();
 
             Path path = Paths.get(rulesFolder);
-
             path.register(
                     watchService,
                     ENTRY_CREATE,
@@ -86,6 +83,7 @@ public class RuleFolderWatcherService {
                     } else if (kind == ENTRY_DELETE) {
                         log.info("Rule file deleted: {}", file);
                     }
+
                     reloadNeeded = true;
                 }
 
