@@ -3,6 +3,7 @@ package org.example.tradingaccountvalidation.repo;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.model.RuleTableRow;
 
+import java.io.File;
 import java.util.List;
 
 public interface RuleMetadataLoaderInterface {
@@ -10,4 +11,5 @@ public interface RuleMetadataLoaderInterface {
     List<RuleMeta> getByTransition(String from, String to);
     List<RuleMeta> getAllRules();
     List<RuleTableRow> getRuleTable();
+    List<RuleMeta> loadFromFiles(File[] files) throws Exception;
 }

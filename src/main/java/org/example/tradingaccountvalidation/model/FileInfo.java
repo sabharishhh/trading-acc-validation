@@ -17,4 +17,5 @@ public class FileInfo {
     private int warnings;
     private String status;
     private String lastModified;
+
 }

@@ -58,7 +58,6 @@ public class RuleRegistryService implements RuleRegistryInterface {
 
                 info.setWarnings(0);
 
-                // Convert boolean to string
                 info.setStatus(buildStatus ? "VERIFIED" : "FAILED");
                 info.setLastModified(LocalDateTime.now().toString());
 

@@ -52,10 +52,11 @@ public class RuleFolderWatcherService {
     }
 
     private void watch() {
+
         try {
             WatchService watchService = FileSystems.getDefault().newWatchService();
-
             Path path = Paths.get(rulesFolder);
+
             path.register(
                     watchService,
                     ENTRY_CREATE,
@@ -82,27 +83,30 @@ public class RuleFolderWatcherService {
                     } else if (kind == ENTRY_DELETE) {
                         log.info("Rule file deleted: {}", file);
                     }
-
                     reloadNeeded = true;
                 }
 
                 if (reloadNeeded) {
-                    log.info("Rule change detected. Reloading rule engine...");
+                    try {
+                        log.info("Rule change detected. Reloading rule engine...");
 
-                    engine.reloadRules();
-                    metadataLoader.reload();
-                    registry.refresh(
-                            rulesFolder,
-                            metadataLoader.getAllRules(),
-                            true
-                    );
-                    log.info("Rulebase reload completed successfully.");
+                        engine.reloadRules();
+                        metadataLoader.reload();
+                        registry.refresh(
+                                rulesFolder,
+                                metadataLoader.getAllRules(),
+                                true
+                        );
+
+                        log.info("Rule files reload completed successfully.");
+                    } catch (Exception e) {
+                        log.error("Rule reload failed. Previous rule set remains active.", e);
+                    }
                 }
                 key.reset();
             }
         } catch (Exception e) {
-            log.error("Rule folder watcher failed", e);
-            throw new RuntimeException("Rule watcher failed", e);
+            log.error("Rule folder watcher infrastructure failed", e);
         }
     }
 }

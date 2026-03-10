@@ -11,10 +11,12 @@ import org.kie.api.runtime.KieSession;
 import org.kie.internal.io.ResourceFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
-
 
 @Service
 public class RuleEngineService implements RuleEngineInterface {
@@ -25,6 +27,7 @@ public class RuleEngineService implements RuleEngineInterface {
 
     @Getter
     private String lastBuildStatus = "UNKNOWN";
+
     @Getter
     private String lastReloadTime = "";
 
@@ -52,18 +55,13 @@ public class RuleEngineService implements RuleEngineInterface {
 
         if (files != null) {
             for (File file : files) {
-                kfs.write(ResourceFactory.newFileResource(file)
-                        .setResourceType(ResourceType.DTABLE));
+                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
             }
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
 
-        if (builder.getResults().hasMessages(Message.Level.ERROR)) {
-            throw new RuntimeException(
-                    "Rule validation failed: " + builder.getResults().getMessages()
-            );
-        }
+        checkForErrors(builder.getResults());
     }
 
     private void buildAndReplace(File[] files) {
@@ -72,27 +70,58 @@ public class RuleEngineService implements RuleEngineInterface {
 
         if (files != null) {
             for (File file : files) {
-                kfs.write(ResourceFactory.newFileResource(file)
-                        .setResourceType(ResourceType.DTABLE));
+                kfs.write(ResourceFactory.newFileResource(file).setResourceType(ResourceType.DTABLE));
             }
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
 
-        if (builder.getResults().hasMessages(Message.Level.ERROR)) {
+        Results results = builder.getResults();
+
+        if (results.hasMessages(Message.Level.ERROR)) {
             lastBuildStatus = "FAILED";
-            throw new RuntimeException(
-                    "Rule build failed: " + builder.getResults().getMessages()
-            );
+            throw new RuntimeException(formatErrors(results));
         }
 
-        KieContainer newContainer =
-                ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
-
+        KieContainer newContainer = ks.newKieContainer(ks.getRepository().getDefaultReleaseId());
         containerRef.set(newContainer);
 
         lastBuildStatus = "SUCCESS";
         lastReloadTime = LocalDateTime.now().toString();
+    }
+
+    private void checkForErrors(Results results) {
+        if (results.hasMessages(Message.Level.ERROR)) {
+            throw new RuntimeException(formatErrors(results));
+        }
+    }
+
+    private String formatErrors(Results results) {
+        StringBuilder errorMessage = new StringBuilder();
+
+        String currentFile = "";
+
+        for (Message msg : results.getMessages(Message.Level.ERROR)) {
+            String file = "Unknown file";
+
+            if (msg.getPath() != null) {
+                Path p = Paths.get(msg.getPath());
+                file = p.getFileName().toString();
+            }
+
+            if (!file.equals(currentFile)) {
+                errorMessage.append("\n").append(file).append("\n");
+                currentFile = file;
+            }
+
+            errorMessage
+                    .append("Line ")
+                    .append(msg.getLine())
+                    .append(" : ")
+                    .append(msg.getText())
+                    .append("\n");
+        }
+        return errorMessage.toString();
     }
 
     @Override

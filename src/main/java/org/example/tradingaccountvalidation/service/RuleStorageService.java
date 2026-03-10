@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.Objects;
@@ -52,6 +54,34 @@ public class RuleStorageService implements RuleStorageInterface {
             Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException("File save failed", e);
+        }
+    }
+
+    @Override
+    public File saveTemp(MultipartFile file) {
+        try {
+            Path tempFolder = Paths.get(rulesFolder, "../rules-temp");
+
+            if (!Files.exists(tempFolder)) {
+                Files.createDirectories(tempFolder);
+            }
+
+            Path tempFile = tempFolder.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Files.copy(file.getInputStream(), tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+            return tempFile.toFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store temporary file", e);
+        }
+    }
+
+    @Override
+    public void moveToRules(File tempFile) {
+        try {
+            Path target = Paths.get(rulesFolder, tempFile.getName());
+            Files.move(tempFile.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to move rule file", e);
         }
     }
 }

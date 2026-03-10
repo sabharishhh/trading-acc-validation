@@ -1,9 +1,6 @@
 package org.example.tradingaccountvalidation.controller;
 
-import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
-import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
-import org.example.tradingaccountvalidation.repo.RuleRegistryInterface;
-import org.example.tradingaccountvalidation.repo.RuleStorageInterface;
+import org.example.tradingaccountvalidation.repo.RuleValidationPipelineInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +15,7 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/rules")
 public class RuleUploadController {
-    private final RuleStorageInterface storage;
-    private final RuleEngineInterface engine;
-    private final RuleMetadataLoaderInterface metadataLoader;
-    private final RuleRegistryInterface registry;
+    private final RuleValidationPipelineInterface validationPipeline;
 
     @Value("${rules.folder}")
     private String rulesFolder;
@@ -29,15 +23,12 @@ public class RuleUploadController {
     @Value("${rules.temp.folder}")
     private String rulesTempFolder;
 
-    public RuleUploadController(RuleStorageInterface storage, RuleEngineInterface engine, RuleMetadataLoaderInterface metadataLoader, RuleRegistryInterface registry) {
-        this.storage = storage;
-        this.engine = engine;
-        this.metadataLoader = metadataLoader;
-        this.registry = registry;
+    public RuleUploadController(RuleValidationPipelineInterface validationPipeline) {
+        this.validationPipeline = validationPipeline;
     }
 
     @PostMapping("/upload")
-    public ResponseEntity<String> upload(@RequestParam("files") MultipartFile[] files) {
+    public synchronized ResponseEntity<String> upload(@RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest().body("No files provided");
         }
@@ -46,17 +37,16 @@ public class RuleUploadController {
 
         try {
             if (Files.exists(tempDir)) {
-                Files.walk(tempDir)
-                        .sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+                try (var paths = Files.walk(tempDir)) {
+                    paths.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
             }
 
             Files.createDirectories(tempDir);
 
             for (MultipartFile file : files) {
-                storage.validate(file);
-
                 String fileName = Objects.requireNonNull(file.getOriginalFilename(), "Filename cannot be null");
                 Path tempTarget = tempDir.resolve(fileName);
 
@@ -73,7 +63,7 @@ public class RuleUploadController {
                 return ResponseEntity.badRequest().body("No valid .xlsx files found");
             }
 
-            engine.validateRuleFiles(tempFiles);
+            validationPipeline.validate(files, tempFiles);
 
             Path rulesDir = Paths.get(rulesFolder);
 
@@ -85,19 +75,33 @@ public class RuleUploadController {
                 Files.move(file.toPath(), rulesDir.resolve(file.getName()), StandardCopyOption.REPLACE_EXISTING);
             }
 
-            engine.reloadRules();
-            metadataLoader.reload();
-            registry.refresh(rulesFolder, metadataLoader.getAllRules(), true);
-
-            Files.walk(tempDir)
-                    .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
-
-            return ResponseEntity.ok(files.length + " file(s) uploaded safely and rules reloaded"
-            );
+            try (var paths = Files.walk(tempDir)) {
+                paths.sorted(Comparator.reverseOrder())
+                        .map(Path::toFile)
+                        .forEach(File::delete);
+            }
+            return ResponseEntity.ok(files.length + " rule file(s) validated and deployed successfully");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
+
+            String errorMessage = e.getMessage();
+
+            if (e.getCause() != null && e.getCause().getMessage() != null) {
+                errorMessage = e.getCause().getMessage();
+            }
+
+            try {
+                if (Files.exists(tempDir)) {
+                    try (var paths = Files.walk(tempDir)) {
+                        paths.sorted(Comparator.reverseOrder())
+                                .map(Path::toFile)
+                                .forEach(File::delete);
+                    }
+                }
+            } catch (Exception ignore) {}
+
+            return ResponseEntity
+                    .badRequest()
+                    .body("File upload failed:\n" + errorMessage);
         }
     }
 }

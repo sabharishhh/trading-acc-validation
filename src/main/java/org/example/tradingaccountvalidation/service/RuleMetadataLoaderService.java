@@ -17,6 +17,7 @@ import java.util.*;
 
 @Component
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
+
     @Value("${rules.folder}")
     private String rulesFolderPath;
 
@@ -32,6 +33,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         allRules.clear();
 
         File folder = new File(rulesFolderPath);
+
         if (!folder.exists()) {
             folder.mkdirs();
         }
@@ -41,31 +43,57 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         }
 
         File[] files = folder.listFiles((dir, name) -> name.endsWith(".xlsx"));
-        if (files == null || files.length == 0) {
+
+        if (files == null) {
             return;
         }
 
         for (File file : files) {
-            loadFile(file);
+            allRules.addAll(loadFileMetadata(file));
         }
     }
 
-    private void loadFile(File file) throws Exception {
+    public List<RuleMeta> loadFromFiles(File[] files) throws Exception {
+        List<RuleMeta> extracted = new ArrayList<>();
+
+        if (files == null) return extracted;
+
+        for (File file : files) {
+            extracted.addAll(loadFileMetadata(file));
+        }
+        return extracted;
+    }
+
+    private List<RuleMeta> loadFileMetadata(File file) throws Exception {
+        List<RuleMeta> extracted = new ArrayList<>();
+
         try (InputStream input = new FileInputStream(file);
              Workbook workbook = new XSSFWorkbook(input)) {
 
             Sheet sheet = workbook.getSheetAt(0);
-            if (sheet == null) return;
+
+            if (sheet == null) return extracted;
 
             Row header = null;
+            String ruleTableName = null;
 
             for (int i = 0; i <= sheet.getLastRowNum(); i++) {
                 Row r = sheet.getRow(i);
+
                 if (r == null) continue;
 
                 for (Cell c : r) {
                     String val = getCellValue(c);
-                    if (val != null && val.startsWith("/account/")) {
+
+                    if (val == null) continue;
+
+                    String normalized = val.trim();
+
+                    if (normalized.startsWith("RuleTable")) {
+                        ruleTableName = normalized.replace("RuleTable", "").trim();
+                    }
+
+                    if (normalized.startsWith("/account/")) {
                         header = r;
                         break;
                     }
@@ -73,12 +101,17 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 if (header != null) break;
             }
 
-            if (header == null) return;
+            if (header == null) return extracted;
+
+            if (ruleTableName == null || ruleTableName.isBlank()) {
+                ruleTableName = file.getName();
+            }
 
             Map<Integer, String> columnPathMap = new HashMap<>();
 
             for (Cell cell : header) {
                 String headerValue = getCellValue(cell);
+
                 if (headerValue != null && headerValue.startsWith("/account/")) {
                     columnPathMap.put(cell.getColumnIndex(), headerValue);
                 }
@@ -90,6 +123,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             if (descriptionRow != null) {
                 for (Cell cell : descriptionRow) {
                     String description = getCellValue(cell);
+
                     if (description != null && !description.isBlank()) {
                         columnDescriptionMap.put(cell.getColumnIndex(), description);
                     }
@@ -98,16 +132,25 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
             for (int i = header.getRowNum() + 2; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
+
                 if (row == null) continue;
 
                 String ruleId = getCellValue(row.getCell(0));
+
                 if (ruleId == null || ruleId.isBlank()) continue;
 
                 String agenda = getCellValue(row.getCell(1));
                 String from = getCellValue(row.getCell(2));
                 String to = getCellValue(row.getCell(3));
 
-                RuleMeta meta = new RuleMeta(ruleId, agenda, from, to, file.getName());
+                RuleMeta meta = new RuleMeta(
+                        ruleId,
+                        ruleTableName,
+                        agenda,
+                        from,
+                        to,
+                        file.getName()
+                );
 
                 for (Map.Entry<Integer, String> entry : columnPathMap.entrySet()) {
                     Cell conditionCell = row.getCell(entry.getKey());
@@ -116,14 +159,18 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                     if (expected != null && !expected.isBlank()) {
                         String template = columnDescriptionMap.get(entry.getKey());
                         meta.getConditions().add(
-                                new ConditionMeta(entry.getValue(), expected, template)
+                                new ConditionMeta(
+                                        entry.getValue(),
+                                        expected,
+                                        template
+                                )
                         );
                     }
                 }
-
-                allRules.add(meta);
+                extracted.add(meta);
             }
         }
+        return extracted;
     }
 
     @Override
@@ -131,10 +178,10 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
         List<RuleTableRow> result = new ArrayList<>();
 
         for (RuleMeta rule : allRules) {
-            Map<String,String> conditionMap = new LinkedHashMap<>();
+            Map<String, String> conditionMap = new LinkedHashMap<>();
 
             for (ConditionMeta condition : rule.getConditions()) {
-                String key = condition.path().replace("/account/","");
+                String key = condition.path().replace("/account/", "");
                 conditionMap.put(key, condition.expected());
             }
 
@@ -153,6 +200,7 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
     @Override
     public List<RuleMeta> getByTransition(String from, String to) {
+
         return allRules.stream()
                 .filter(r ->
                         Objects.equals(r.getStatusFrom(), from)
