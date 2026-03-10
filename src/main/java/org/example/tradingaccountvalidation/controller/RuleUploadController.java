@@ -104,4 +104,21 @@ public class RuleUploadController {
                     .body("File upload failed:\n" + errorMessage);
         }
     }
+
+    @DeleteMapping("/{fileName}")
+    public ResponseEntity<String> deleteRule(@PathVariable String fileName) {
+        try {
+            Path filePath = Paths.get(rulesFolder, fileName);
+
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.badRequest().body("File not found: " + fileName);
+            }
+
+            Files.delete(filePath);
+
+            return ResponseEntity.ok("Rule file deleted: " + fileName);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Delete failed: " + e.getMessage());
+        }
+    }
 }
