@@ -19,7 +19,6 @@ public class TradingAccountValidationController {
 
     @PostMapping("/user")
     public ResponseEntity<DynamicAccountSnapshot> validateAccount(@RequestBody JsonNode body) {
-
         DynamicAccountSnapshot snapshot = new DynamicAccountSnapshot(body);
         String customerId = snapshot.getString("/account/customerId");
 
