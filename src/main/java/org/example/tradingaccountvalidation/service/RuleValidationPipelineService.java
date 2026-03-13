@@ -33,6 +33,7 @@ public class RuleValidationPipelineService implements RuleValidationPipelineInte
         /* 2 drools compilation validation */
         engine.validateRuleFiles(tempFiles);
 
+
         /* 3 load existing metadata */
         metadataLoader.reload();
         List<RuleMeta> existingRules = metadataLoader.getAllRules();

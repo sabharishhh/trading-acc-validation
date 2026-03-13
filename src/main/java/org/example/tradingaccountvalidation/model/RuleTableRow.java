@@ -11,8 +11,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class RuleTableRow {
     private String ruleId;
-    private String statusFrom;
-    private String statusTo;
+    private String agendaGroup;
     private String sourceFile;
-    private Map<String, String> conditions;
+    private Map<String,String> conditions;
 }

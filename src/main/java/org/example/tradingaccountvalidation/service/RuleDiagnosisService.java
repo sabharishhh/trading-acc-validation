@@ -5,6 +5,7 @@ import org.example.tradingaccountvalidation.model.DynamicAccountSnapshot;
 import org.example.tradingaccountvalidation.model.RuleMeta;
 import org.example.tradingaccountvalidation.repo.RuleDiagnosisInterface;
 import org.springframework.stereotype.Component;
+
 import java.util.*;
 
 @Component
@@ -18,17 +19,35 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
             List<Map<String, String>> failedConditions = new ArrayList<>();
 
             for (ConditionMeta condition : rule.getConditions()) {
+                String expected = condition.expected();
+
+                // Skip any empty conditions padding the decision table
+                if (expected == null || expected.isBlank()) {
+                    continue;
+                }
+
                 String actual = snapshot.getString(condition.path());
 
-                if (!Objects.equals(condition.expected(), actual)) {
-
+                if (!Objects.equals(expected, actual)) {
                     Map<String, String> fail = new HashMap<>();
-                    String safeActual = actual == null ? "null" : actual;
-                    String template = condition.template() == null
-                                    ? "Expected $expected but found $actual"
-                                    : condition.template();
+                    String safeActual = (actual == null) ? "null" : actual;
 
-                    String description = template.replace("$expected", condition.expected()).replace("$actual", safeActual);
+                    String template = condition.template();
+
+                    // SMART TEMPLATE FORMATTER
+                    // 1. If template is missing, blank, or accidentally parsed as the path:
+                    if (template == null || template.isBlank() || template.contains("/account/")) {
+                        template = "Expected $expected but found $actual";
+                    }
+                    // 2. If template is just a header label (like "EquityPosn"):
+                    else if (!template.contains("$expected") && !template.contains("$actual")) {
+                        template = template + " (Expected $expected but found $actual)";
+                    }
+
+                    // Inject the live data into the formatted string
+                    String description = template
+                            .replace("$expected", expected)
+                            .replace("$actual", safeActual);
 
                     fail.put("Path", condition.path());
                     fail.put("Reason", description);
@@ -39,13 +58,12 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
 
             if (!failedConditions.isEmpty()) {
                 Map<String, Object> ruleDiag = new HashMap<>();
-
                 ruleDiag.put("ruleId", rule.getRuleId());
                 ruleDiag.put("failedConditions", failedConditions);
-
                 diagnostics.add(ruleDiag);
             }
         }
+
         return diagnostics;
     }
 }
