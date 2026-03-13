@@ -1,5 +1,6 @@
 package org.example.tradingaccountvalidation.controller;
 
+import org.example.tradingaccountvalidation.repo.RuleBackupInterface;
 import org.example.tradingaccountvalidation.repo.RuleValidationPipelineInterface;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +16,9 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/rules")
 public class RuleUploadController {
+
     private final RuleValidationPipelineInterface validationPipeline;
+    private final RuleBackupInterface backupService;
 
     @Value("${rules.folder}")
     private String rulesFolder;
@@ -23,15 +26,19 @@ public class RuleUploadController {
     @Value("${rules.temp.folder}")
     private String rulesTempFolder;
 
-    public RuleUploadController(RuleValidationPipelineInterface validationPipeline) {
+    public RuleUploadController(RuleValidationPipelineInterface validationPipeline, RuleBackupInterface backupService) {
         this.validationPipeline = validationPipeline;
+        this.backupService = backupService;
     }
 
     @PostMapping("/upload")
     public synchronized ResponseEntity<String> upload(@RequestParam("files") MultipartFile[] files) {
+
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest().body("No files provided");
         }
+
+        backupService.createBackup("FILE_UPLOAD");
 
         Path tempDir = Paths.get(rulesTempFolder);
 
@@ -81,6 +88,7 @@ public class RuleUploadController {
                         .forEach(File::delete);
             }
             return ResponseEntity.ok(files.length + " rule file(s) validated and deployed successfully");
+
         } catch (Exception e) {
 
             String errorMessage = e.getMessage();
@@ -114,9 +122,12 @@ public class RuleUploadController {
                 return ResponseEntity.badRequest().body("File not found: " + fileName);
             }
 
+            backupService.createBackup("FILE_DELETE_" + fileName);
+
             Files.delete(filePath);
 
             return ResponseEntity.ok("Rule file deleted: " + fileName);
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Delete failed: " + e.getMessage());
         }
