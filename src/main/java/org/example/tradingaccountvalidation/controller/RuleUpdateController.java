@@ -5,6 +5,7 @@ import org.example.tradingaccountvalidation.model.RuleUpdateRequest;
 import org.example.tradingaccountvalidation.repo.RuleBackupInterface;
 import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
+import org.example.tradingaccountvalidation.service.AuditService; // Make sure the package matches your structure
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,6 +28,7 @@ public class RuleUpdateController {
     private final RuleEngineInterface ruleEngine;
     private final RuleMetadataLoaderInterface metadataLoader;
     private final RuleBackupInterface backupService;
+    private final AuditService auditService; // Added AuditService injection
 
     @Value("${rules.folder}")
     private String rulesFolder;
@@ -44,6 +47,7 @@ public class RuleUpdateController {
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
+            DataFormatter dataFormatter = new DataFormatter(); // Safely extracts old cell values
 
             // 1. Find Header Row to map paths back to column indexes
             Row headerRow = null;
@@ -77,7 +81,7 @@ public class RuleUpdateController {
                 }
             }
 
-            // 2. Apply Updates
+            // 2. Apply Updates and Log
             for (Map.Entry<String, Map<String, String>> ruleUpdate : request.getUpdates().entrySet()) {
                 String targetRuleId = ruleUpdate.getKey();
                 Map<String, String> cellChanges = ruleUpdate.getValue();
@@ -87,18 +91,29 @@ public class RuleUpdateController {
                     Row row = sheet.getRow(i);
                     if (row == null || row.getCell(0) == null) continue;
 
-                    String currentRuleId = row.getCell(0).getStringCellValue().trim();
+                    String currentRuleId = dataFormatter.formatCellValue(row.getCell(0)).trim();
                     if (targetRuleId.equals(currentRuleId)) {
 
-                        // Apply the new Y/N values
                         for (Map.Entry<String, String> change : cellChanges.entrySet()) {
                             Integer colIdx = pathToColIndex.get(change.getKey());
                             if (colIdx != null) {
                                 Cell cellToUpdate = row.getCell(colIdx);
+                                String oldValue = "-";
+
                                 if (cellToUpdate == null) {
                                     cellToUpdate = row.createCell(colIdx);
+                                } else {
+                                    // Safely grab what was there before we overwrite it
+                                    oldValue = dataFormatter.formatCellValue(cellToUpdate);
                                 }
-                                cellToUpdate.setCellValue(change.getValue());
+
+                                String newValue = change.getValue();
+
+                                // Only overwrite and log if a change actually occurred
+                                if (!oldValue.equals(newValue)) {
+                                    cellToUpdate.setCellValue(newValue);
+                                    auditService.logEdit(request.getFileName(), targetRuleId, change.getKey(), oldValue, newValue);
+                                }
                             }
                         }
                         break; // Move to next rule update
@@ -121,5 +136,11 @@ public class RuleUpdateController {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error updating rules: " + e.getMessage());
         }
+    }
+
+    // ================= NEW AUDIT ENDPOINT =================
+    @GetMapping("/audit")
+    public ResponseEntity<List<Map<String, String>>> getAuditLogs() {
+        return ResponseEntity.ok(auditService.getAllLogs());
     }
 }

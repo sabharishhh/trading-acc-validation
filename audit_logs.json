@@ -1,0 +1,41 @@
+[ {
+  "newValue" : "Y*",
+  "fileName" : "rules_4.xlsx",
+  "column" : "derivativeOpenPosition",
+  "id" : "1773395656844",
+  "oldValue" : "N",
+  "ruleId" : "buyingOnlyToInactiveR",
+  "timestamp" : "13 Mar 2026, 15:24:16"
+}, {
+  "newValue" : "*edited cell",
+  "fileName" : "rules_2.xlsx",
+  "column" : "equityOpenPosition",
+  "id" : "1773395641805",
+  "oldValue" : "changed again",
+  "ruleId" : "activeToFreezeR",
+  "timestamp" : "13 Mar 2026, 15:24:01"
+}, {
+  "newValue" : "Y",
+  "fileName" : "rules_4.xlsx",
+  "column" : "mtfOpenPosn",
+  "id" : "1773395145266",
+  "oldValue" : "N",
+  "ruleId" : "buyingOnlyToSuspendR",
+  "timestamp" : "13 Mar 2026, 15:15:45"
+}, {
+  "newValue" : "Y",
+  "fileName" : "rules_1.xlsx",
+  "column" : "equityOpenPosition",
+  "id" : "1773395140160",
+  "oldValue" : "N",
+  "ruleId" : "sellingOnlyToSuspendR",
+  "timestamp" : "13 Mar 2026, 15:15:40"
+}, {
+  "newValue" : "changed again",
+  "fileName" : "rules_2.xlsx",
+  "column" : "equityOpenPosition",
+  "id" : "1773395126476",
+  "oldValue" : "1st change",
+  "ruleId" : "activeToFreezeR",
+  "timestamp" : "13 Mar 2026, 15:15:26"
+} ]

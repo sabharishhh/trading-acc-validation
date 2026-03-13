@@ -36,7 +36,6 @@ public class RuleBackupController {
             return ResponseEntity.internalServerError().body("Restore failed: " + e.getMessage());
         }
     }
-
     @DeleteMapping("/delete/{folderName}")
     public ResponseEntity<String> deleteBackup(@PathVariable String folderName) {
         try {
