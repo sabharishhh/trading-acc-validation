@@ -22,7 +22,6 @@ import java.util.Map;
 @AllArgsConstructor
 @Service
 public class TradingAccountValidationService implements TradingAccountValidationInterface {
-
     private final RuleEngineInterface engine;
     private final RuleDiagnosisInterface diagnosis;
     private final RuleMetadataLoaderInterface metadataLoader;
@@ -31,13 +30,10 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
     @Override
     public DynamicAccountSnapshot validateAccount(DynamicAccountSnapshot snapshot) {
-
         KieSession session = null;
 
         try {
-
             session = engine.newSession();
-
             log.info("--- Inspecting Loaded Knowledge Base ---");
 
             for (org.kie.api.definition.KiePackage pkg : session.getKieBase().getKiePackages()) {
@@ -52,7 +48,6 @@ public class TradingAccountValidationService implements TradingAccountValidation
 
             session.insert(snapshot);
 
-            // Extract agenda from payload
             String agenda = snapshot.getString("agenda-group");
 
             if (agenda != null) {
@@ -75,41 +70,31 @@ public class TradingAccountValidationService implements TradingAccountValidation
             agendaGroup.setFocus();
 
             int fired = session.fireAllRules();
-
             log.info("Rules fired for [{}]: {}", agenda, fired);
 
-            // Diagnosis fallback
             if (fired == 0) {
-
                 List<RuleMeta> rules = metadataLoader.getByAgendaGroup(agenda);
-
                 log.info("Metadata rules found for agenda [{}]: {}", agenda, rules.size());
 
                 if (!rules.isEmpty()) {
-
                     List<Map<String, Object>> reasons = diagnosis.diagnose(snapshot, rules);
 
                     snapshot.set("/account/output/evaluationStatus", "No Valid Rule Applicable");
                     snapshot.set("/account/output/reasons", reasons);
 
                 } else {
-
                     log.warn("No metadata rules found for agenda {}", agenda);
 
                     snapshot.set("/account/output/evaluationStatus", "No Valid Rule Applicable");
                     snapshot.set("/account/output/reasons", List.of());
                 }
             }
-
             return snapshot;
-
         } catch (Exception e) {
-
             log.error("SYSTEM FAILURE: {}", e.getMessage());
             throw e;
 
         } finally {
-
             if (session != null) {
                 session.dispose();
             }

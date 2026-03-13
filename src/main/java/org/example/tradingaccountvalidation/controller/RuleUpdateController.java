@@ -5,7 +5,7 @@ import org.example.tradingaccountvalidation.model.RuleUpdateRequest;
 import org.example.tradingaccountvalidation.repo.RuleBackupInterface;
 import org.example.tradingaccountvalidation.repo.RuleEngineInterface;
 import org.example.tradingaccountvalidation.repo.RuleMetadataLoaderInterface;
-import org.example.tradingaccountvalidation.service.AuditService; // Make sure the package matches your structure
+import org.example.tradingaccountvalidation.service.AuditService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,11 +24,10 @@ import java.util.Map;
 @CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class RuleUpdateController {
-
     private final RuleEngineInterface ruleEngine;
     private final RuleMetadataLoaderInterface metadataLoader;
     private final RuleBackupInterface backupService;
-    private final AuditService auditService; // Added AuditService injection
+    private final AuditService auditService;
 
     @Value("${rules.folder}")
     private String rulesFolder;
@@ -47,16 +46,14 @@ public class RuleUpdateController {
              Workbook workbook = new XSSFWorkbook(fis)) {
 
             Sheet sheet = workbook.getSheetAt(0);
-            DataFormatter dataFormatter = new DataFormatter(); // Safely extracts old cell values
+            DataFormatter dataFormatter = new DataFormatter();
 
-            // 1. Find Header Row to map paths back to column indexes
             Row headerRow = null;
             for (int i = 0; i <= sheet.getLastRowNum(); i++) {
                 Row r = sheet.getRow(i);
                 if (r != null && r.getCell(0) != null) {
                     if (r.getCell(0).getStringCellValue().equalsIgnoreCase("Name") ||
                             r.getCell(0).getStringCellValue().equalsIgnoreCase("Rule Name")) {
-                        // The actual condition paths are usually 2 rows down from the "Name" row in your format
                         headerRow = sheet.getRow(i + 2);
                         break;
                     }
@@ -70,8 +67,7 @@ public class RuleUpdateController {
                 if (cell.getCellType() == CellType.STRING) {
                     String val = cell.getStringCellValue();
                     if (val.contains("/account/")) {
-                        // Extract the path exactly how the frontend stripped it
-                        int start = val.indexOf("/account/") + 9; // length of "/account/"
+                        int start = val.indexOf("/account/") + 9;
                         int end = val.indexOf("\"", start);
                         if (end > start) {
                             String key = val.substring(start, end);
@@ -81,12 +77,10 @@ public class RuleUpdateController {
                 }
             }
 
-            // 2. Apply Updates and Log
             for (Map.Entry<String, Map<String, String>> ruleUpdate : request.getUpdates().entrySet()) {
                 String targetRuleId = ruleUpdate.getKey();
                 Map<String, String> cellChanges = ruleUpdate.getValue();
 
-                // Find the specific rule row
                 for (int i = headerRow.getRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
                     Row row = sheet.getRow(i);
                     if (row == null || row.getCell(0) == null) continue;
@@ -103,42 +97,36 @@ public class RuleUpdateController {
                                 if (cellToUpdate == null) {
                                     cellToUpdate = row.createCell(colIdx);
                                 } else {
-                                    // Safely grab what was there before we overwrite it
                                     oldValue = dataFormatter.formatCellValue(cellToUpdate);
                                 }
 
                                 String newValue = change.getValue();
 
-                                // Only overwrite and log if a change actually occurred
                                 if (!oldValue.equals(newValue)) {
                                     cellToUpdate.setCellValue(newValue);
                                     auditService.logEdit(request.getFileName(), targetRuleId, change.getKey(), oldValue, newValue);
                                 }
                             }
                         }
-                        break; // Move to next rule update
+                        break;
                     }
                 }
             }
 
-            // 3. Write changes back to the file
             try (FileOutputStream fos = new FileOutputStream(file)) {
                 workbook.write(fos);
             }
 
-            // 4. Reload the Engine and Metadata Cache
             ruleEngine.reloadRules();
             metadataLoader.reload();
 
             return ResponseEntity.ok("Rules updated successfully");
-
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.internalServerError().body("Error updating rules: " + e.getMessage());
         }
     }
 
-    // ================= NEW AUDIT ENDPOINT =================
     @GetMapping("/audit")
     public ResponseEntity<List<Map<String, String>>> getAuditLogs() {
         return ResponseEntity.ok(auditService.getAllLogs());

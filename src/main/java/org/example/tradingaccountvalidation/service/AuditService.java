@@ -1,4 +1,4 @@
-package org.example.tradingaccountvalidation.service; // Adjust package to match yours
+package org.example.tradingaccountvalidation.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,18 +16,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Service
 public class AuditService {
-
-    // In-memory cache
     private final List<Map<String, String>> auditLogs = new CopyOnWriteArrayList<>();
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm:ss");
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // The physical file where logs will live permanently
     private final String AUDIT_FILE_PATH = "audit_logs.json";
 
     @PostConstruct
     public void init() {
-        // When the server starts (or restarts), load the history back into memory
         File file = new File(AUDIT_FILE_PATH);
         if (file.exists()) {
             try {
@@ -49,10 +45,8 @@ public class AuditService {
         logEntry.put("oldValue", oldValue != null ? oldValue : "-");
         logEntry.put("newValue", newValue != null ? newValue : "-");
 
-        // Add to the top of the list
-        auditLogs.add(0, logEntry);
+        auditLogs.addFirst(logEntry);
 
-        // Immediately save to the physical file
         saveToFile();
     }
 
@@ -62,7 +56,6 @@ public class AuditService {
 
     private void saveToFile() {
         try {
-            // Write the beautifully formatted JSON to the project root
             objectMapper.writerWithDefaultPrettyPrinter().writeValue(new File(AUDIT_FILE_PATH), auditLogs);
         } catch (IOException e) {
             System.err.println("Failed to save audit logs to file: " + e.getMessage());

@@ -16,7 +16,6 @@ import java.util.Objects;
 @RestController
 @RequestMapping("/rules")
 public class RuleUploadController {
-
     private final RuleValidationPipelineInterface validationPipeline;
     private final RuleBackupInterface backupService;
 
@@ -33,7 +32,6 @@ public class RuleUploadController {
 
     @PostMapping("/upload")
     public synchronized ResponseEntity<String> upload(@RequestParam("files") MultipartFile[] files) {
-
         if (files == null || files.length == 0) {
             return ResponseEntity.badRequest().body("No files provided");
         }
@@ -88,9 +86,7 @@ public class RuleUploadController {
                         .forEach(File::delete);
             }
             return ResponseEntity.ok(files.length + " rule file(s) validated and deployed successfully");
-
         } catch (Exception e) {
-
             String errorMessage = e.getMessage();
 
             if (e.getCause() != null && e.getCause().getMessage() != null) {
@@ -123,11 +119,8 @@ public class RuleUploadController {
             }
 
             backupService.createBackup("FILE_DELETE_" + fileName);
-
             Files.delete(filePath);
-
             return ResponseEntity.ok("Rule file deleted: " + fileName);
-
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Delete failed: " + e.getMessage());
         }

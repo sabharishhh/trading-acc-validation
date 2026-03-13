@@ -26,13 +26,11 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 public class RuleBackupService implements RuleBackupInterface {
-
     private static final Logger log = LoggerFactory.getLogger(RuleBackupService.class);
 
     @Value("${rules.folder}")
     private String rulesFolder;
 
-    // Default to a folder named "rules_backup" next to your project
     @Value("${backup.folder:./rules_backup}")
     private String backupFolder;
 
@@ -48,7 +46,6 @@ public class RuleBackupService implements RuleBackupInterface {
             File[] files = srcDir.listFiles((dir, name) -> name.endsWith(".xlsx") && !name.startsWith("~$"));
             if (files == null || files.length == 0) return;
 
-            // Format: 20260313_094530_UI_UPDATE
             String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String backupFolderName = timestamp + "_" + actionTrigger;
 
@@ -61,7 +58,6 @@ public class RuleBackupService implements RuleBackupInterface {
             }
 
             log.info("Created rule backup snapshot: {}", backupFolderName);
-
         } catch (Exception e) {
             log.error("Failed to create backup: {}", e.getMessage(), e);
         }
@@ -77,12 +73,11 @@ public class RuleBackupService implements RuleBackupInterface {
         File[] folders = backupDir.listFiles(File::isDirectory);
         if (folders == null) return snapshots;
 
-        // Sort newest first
         Arrays.sort(folders, Comparator.comparing(File::getName).reversed());
 
         for (File folder : folders) {
             String name = folder.getName();
-            String[] parts = name.split("_", 3); // Expected: [yyyyMMdd, HHmmss, Action]
+            String[] parts = name.split("_", 3);
 
             String timestamp = parts.length >= 2 ? parts[0] + " " + parts[1].replaceAll("..(?!$)", "$0:") : name;
             String action = parts.length >= 3 ? parts[2] : "MANUAL_BACKUP";
@@ -93,7 +88,6 @@ public class RuleBackupService implements RuleBackupInterface {
 
             snapshots.add(new BackupSnapshot(name, timestamp, action, fileCount));
         }
-
         return snapshots;
     }
 
@@ -105,14 +99,12 @@ public class RuleBackupService implements RuleBackupInterface {
                 throw new RuntimeException("Backup snapshot not found: " + folderName);
             }
 
-            // 1. Clear current active rules
             File activeDir = new File(rulesFolder);
             File[] activeFiles = activeDir.listFiles((dir, name) -> name.endsWith(".xlsx"));
             if (activeFiles != null) {
                 for (File f : activeFiles) f.delete();
             }
 
-            // 2. Copy backup files to active rules folder
             try (Stream<Path> stream = Files.list(targetBackupPath)) {
                 stream.filter(path -> path.toString().endsWith(".xlsx"))
                         .forEach(src -> {
@@ -125,12 +117,10 @@ public class RuleBackupService implements RuleBackupInterface {
                         });
             }
 
-            // 3. Trigger full system reload
             ruleEngine.reloadRules();
             metadataLoader.reload();
 
             log.info("Successfully restored rules from snapshot: {}", folderName);
-
         } catch (Exception e) {
             log.error("Restore failed: {}", e.getMessage(), e);
             throw new RuntimeException("Restore failed", e);

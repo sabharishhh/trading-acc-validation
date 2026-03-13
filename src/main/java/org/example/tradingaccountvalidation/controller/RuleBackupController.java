@@ -10,10 +10,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/backups")
-@CrossOrigin(origins = "http://localhost:3000") // Adjust to your React port
+@CrossOrigin(origins = "http://localhost:3000")
 @RequiredArgsConstructor
 public class RuleBackupController {
-
     private final RuleBackupInterface backupService;
 
     @GetMapping

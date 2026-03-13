@@ -11,7 +11,6 @@ import java.util.Set;
 
 @Service
 public class RuleValidationService implements RuleValidationInterface {
-
     @Override
     public void validateDuplicateRuleTables(List<RuleMeta> rules, Set<String> uploadingFiles) {
         Map<String, String> tableOwners = new HashMap<>();

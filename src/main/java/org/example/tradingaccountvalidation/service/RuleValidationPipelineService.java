@@ -24,36 +24,26 @@ public class RuleValidationPipelineService implements RuleValidationPipelineInte
 
     @Override
     public void validate(MultipartFile[] files, File[] tempFiles) throws Exception {
-
-        /* 1 file validation */
         for (MultipartFile file : files) {
             storage.validate(file);
         }
 
-        /* 2 drools compilation validation */
         engine.validateRuleFiles(tempFiles);
-
-
-        /* 3 load existing metadata */
         metadataLoader.reload();
-        List<RuleMeta> existingRules = metadataLoader.getAllRules();
 
-        /* 4 load metadata from uploaded files */
+        List<RuleMeta> existingRules = metadataLoader.getAllRules();
         List<RuleMeta> newRules = metadataLoader.loadFromFiles(tempFiles);
 
-        /* 5 combine rules */
         List<RuleMeta> combined = new ArrayList<>();
         combined.addAll(existingRules);
         combined.addAll(newRules);
 
-        /* 6 detect uploaded filenames */
         Set<String> uploadingFiles = new HashSet<>();
 
         for (File file : tempFiles) {
             uploadingFiles.add(file.getName());
         }
 
-        /* 7 validate duplicates */
         validator.validateDuplicateRuleTables(combined, uploadingFiles);
     }
 }

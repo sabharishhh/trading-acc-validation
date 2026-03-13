@@ -60,7 +60,6 @@ public class RuleEngineService implements RuleEngineInterface {
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
-
         checkForErrors(builder.getResults());
     }
 
@@ -75,7 +74,6 @@ public class RuleEngineService implements RuleEngineInterface {
         }
 
         KieBuilder builder = ks.newKieBuilder(kfs).buildAll();
-
         Results results = builder.getResults();
 
         if (results.hasMessages(Message.Level.ERROR)) {
@@ -98,7 +96,6 @@ public class RuleEngineService implements RuleEngineInterface {
 
     private String formatErrors(Results results) {
         StringBuilder errorMessage = new StringBuilder();
-
         String currentFile = "";
 
         for (Message msg : results.getMessages(Message.Level.ERROR)) {

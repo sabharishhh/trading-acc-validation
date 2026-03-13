@@ -19,7 +19,6 @@ import java.util.*;
 
 @Component
 public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
-
     private static final Logger log = LoggerFactory.getLogger(RuleMetadataLoaderService.class);
 
     @Value("${rules.folder}")
@@ -75,7 +74,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
             int typeRowIndex = -1;
             String ruleTableName = file.getName();
 
-            // 1. Find the Type Row (Name, AGENDA-GROUP, Condition, Action)
             for (int i = 0; i <= sheet.getLastRowNum(); i++) {
                 Row r = sheet.getRow(i);
                 if (r == null) continue;
@@ -97,7 +95,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 return extracted;
             }
 
-            // 2. Identify ONLY the columns that are explicitly "Condition" (Ignores Actions!)
             Set<Integer> conditionColumnIndexes = new HashSet<>();
             for (Cell cell : typeRow) {
                 String val = getCellValue(cell);
@@ -106,7 +103,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 }
             }
 
-            // 3. Find the condition code row (contains /account/)
             Row conditionPathRow = null;
             for (int i = typeRowIndex + 1; i <= typeRowIndex + 5; i++) {
                 Row r = sheet.getRow(i);
@@ -124,7 +120,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
 
             if (conditionPathRow == null) return extracted;
 
-            // Map the paths ONLY for true Condition columns
             Map<Integer, String> columnPathMap = new HashMap<>();
             for (Integer colIdx : conditionColumnIndexes) {
                 String val = getCellValue(conditionPathRow.getCell(colIdx));
@@ -133,7 +128,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 }
             }
 
-            // 4. Map Descriptions
             Row descriptionRow = sheet.getRow(conditionPathRow.getRowNum() + 1);
             Map<Integer, String> columnDescriptionMap = new HashMap<>();
             if (descriptionRow != null) {
@@ -145,7 +139,6 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                 }
             }
 
-            // 5. Extract Data Rows
             for (int i = conditionPathRow.getRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null) continue;
@@ -175,10 +168,8 @@ public class RuleMetadataLoaderService implements RuleMetadataLoaderInterface {
                         meta.getConditions().add(new ConditionMeta(path, expected, template));
                     }
                 }
-
                 extracted.add(meta);
             }
-
         } catch (Exception e) {
             log.error("Error parsing Excel file: {}", e.getMessage(), e);
         }

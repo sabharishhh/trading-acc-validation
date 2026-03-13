@@ -18,7 +18,6 @@ public class RuleStorageService implements RuleStorageInterface {
     private String rulesFolder;
 
     private static final Logger log = LoggerFactory.getLogger(RuleStorageService.class);
-
     private static final long MAX_SIZE = 5 * 1024 * 1024;
 
     @Override

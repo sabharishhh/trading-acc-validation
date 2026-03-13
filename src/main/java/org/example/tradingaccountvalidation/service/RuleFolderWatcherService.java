@@ -52,7 +52,6 @@ public class RuleFolderWatcherService {
     }
 
     private void watch() {
-
         try {
             WatchService watchService = FileSystems.getDefault().newWatchService();
             Path path = Paths.get(rulesFolder);

@@ -21,7 +21,6 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
             for (ConditionMeta condition : rule.getConditions()) {
                 String expected = condition.expected();
 
-                // Skip any empty conditions padding the decision table
                 if (expected == null || expected.isBlank()) {
                     continue;
                 }
@@ -34,17 +33,13 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
 
                     String template = condition.template();
 
-                    // SMART TEMPLATE FORMATTER
-                    // 1. If template is missing, blank, or accidentally parsed as the path:
                     if (template == null || template.isBlank() || template.contains("/account/")) {
                         template = "Expected $expected but found $actual";
                     }
-                    // 2. If template is just a header label (like "EquityPosn"):
                     else if (!template.contains("$expected") && !template.contains("$actual")) {
                         template = template + " (Expected $expected but found $actual)";
                     }
 
-                    // Inject the live data into the formatted string
                     String description = template
                             .replace("$expected", expected)
                             .replace("$actual", safeActual);
@@ -63,7 +58,6 @@ public class RuleDiagnosisService implements RuleDiagnosisInterface {
                 diagnostics.add(ruleDiag);
             }
         }
-
         return diagnostics;
     }
 }

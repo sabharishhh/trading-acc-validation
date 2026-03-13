@@ -10,7 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class FileInfo {
-
     private String fileName;
     private int ruleCount;
     private List<String> agendaGroups;

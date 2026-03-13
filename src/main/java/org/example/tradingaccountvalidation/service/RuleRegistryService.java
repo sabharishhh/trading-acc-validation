@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 @Service
 public class RuleRegistryService implements RuleRegistryInterface {
     private final Map<String, FileInfo> fileInfoMap = new HashMap<>();
-
     private int totalRules = 0;
     private int totalFiles = 0;
     private Set<String> agendaGroups = new HashSet<>();
