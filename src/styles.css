@@ -90,6 +90,7 @@ body {
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  position: relative;
 }
 
 .meta {
@@ -136,6 +137,21 @@ body {
   background: #f8d7da;
   color: #c62828;
 }
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #d32f2f;
+}
+
+.delete-btn:hover {
+  color: #b71c1c;
+}
+
 /* ================= Upload Section ================= */
 
 .upload-card {
@@ -148,16 +164,12 @@ body {
   margin: 0 auto;
 }
 
-/* Title */
-
 .section-title {
   font-size: 22px;
   font-weight: 600;
   margin-bottom: 30px;
   color: #107c41;
 }
-
-/* Drop Zone */
 
 .drop-zone {
   display: block;
@@ -206,8 +218,6 @@ body {
   margin-top: 4px;
 }
 
-/* Selected Files */
-
 .selected-files {
   margin-top: 25px;
   display: flex;
@@ -234,8 +244,7 @@ body {
   cursor: pointer;
 }
 
-/* Button */
-
+/* Base Primary Button (Used in Upload) */
 .primary-btn {
   margin-top: 30px;
   width: 100%;
@@ -259,12 +268,12 @@ body {
   cursor: not-allowed;
 }
 
-/* Message */
-
 .upload-message {
   margin-top: 20px;
-  text-align: center;
+  text-align: left;
   font-weight: 500;
+  white-space: pre-line;
+  font-family: monospace;
 }
 
 .upload-message.success {
@@ -273,4 +282,341 @@ body {
 
 .upload-message.error {
   color: #c62828;
+}
+
+/* ================= Excel-like Rules Table ================= */
+
+.rules-table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  border: 1px solid #dcdcdc;
+}
+
+.rules-table {
+  border-collapse: collapse;
+  width: max-content;
+  min-width: 100%;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.rules-table thead th {
+  position: sticky;
+  top: 0;
+  background: #107c41;
+  color: white;
+  font-weight: 600;
+  border: 1px solid #0e6e39;
+  padding: 6px 10px;
+  white-space: nowrap;
+}
+
+.rules-table td {
+  border: 1px solid #e0e0e0;
+  padding: 5px 8px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.rules-table tbody tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.rules-table tbody tr:hover {
+  background: #eef6f1;
+}
+
+.rules-table td:first-child {
+  font-weight: 600;
+}
+
+.rules-file-title {
+  margin: 30px 0 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #107c41;
+}
+
+/* Table Header Action Row */
+.table-header-action {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.save-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: max-content; 
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: #107c41;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(16, 124, 65, 0.2);
+}
+
+.save-btn:hover {
+  background-color: #0b5c30;
+  box-shadow: 0 4px 8px rgba(16, 124, 65, 0.3);
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  background-color: #a0c2b0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Editable Cell Styles */
+.editable-cell {
+  padding: 0 !important;
+  background-color: #f0fdf4;
+}
+
+.cell-dropdown {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: center;
+  outline: none;
+  color: #107c41;
+  font-weight: 600;
+}
+
+.cell-dropdown:focus {
+  background-color: #e2f5ea;
+  box-shadow: inset 0 0 0 2px #107c41;
+}
+
+/* ================= Modern Backup Panel Layout ================= */
+
+.panel-container {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  border: 1px solid #eaedf0;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+
+.panel-title {
+  margin: 0 0 6px 0;
+  color: #1a1a1a;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.panel-subtitle {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* Adjusted primary button specifically for the Panel header */
+.panel-header .primary-btn {
+  margin-top: 0;
+  width: auto;
+  padding: 10px 18px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(16, 124, 65, 0.2);
+}
+
+/* ================= Modern Table (For Backups) ================= */
+
+.modern-table-wrapper {
+  overflow-x: auto;
+  border: 1px solid #eaedf0;
+  border-radius: 8px;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.modern-table th {
+  padding: 14px 20px;
+  background-color: #fafbfc;
+  border-bottom: 1px solid #eaedf0;
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modern-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.modern-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.modern-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.fw-500 {
+  font-weight: 500;
+}
+
+.text-dark {
+  color: #111827 !important;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+/* ================= Colored Pill Badges ================= */
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  width: max-content;
+  text-transform: capitalize;
+}
+
+.badge-success {
+  background: #e6f4ea;
+  color: #107c41; /* Excel green */
+}
+
+.badge-warning {
+  background: #fef0d9;
+  color: #b26a00;
+}
+
+.badge-danger {
+  background: #fce8e6;
+  color: #c62828;
+}
+
+.badge-info {
+  background: #e8f0fe;
+  color: #1967d2;
+}
+
+/* ================= Action Buttons ================= */
+
+.danger-btn-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: white;
+  border: 1px solid #f87171;
+  color: #dc2626;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.danger-btn-outline:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.danger-btn-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ================= Empty State ================= */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #e5e7eb;
+}
+
+.empty-icon {
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  margin: 0 0 8px 0;
+  color: #374151;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #6b7280;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+/* ================= Icon Only Buttons ================= */
+.icon-only-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.icon-only-btn:hover {
+  background: #fce8e6;
+  color: #c62828 !important;
 }

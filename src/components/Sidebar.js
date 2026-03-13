@@ -1,4 +1,10 @@
-import { LayoutDashboard, FileSpreadsheet, Upload } from "lucide-react";
+import {
+  LayoutDashboard,
+  FileSpreadsheet,
+  Upload,
+  ListChecks,
+  History
+} from "lucide-react";
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   return (
@@ -25,6 +31,20 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         active={activeTab === "upload"}
         onClick={() => setActiveTab("upload")}
       />
+
+      <NavItem
+        label="Active Rules"
+        icon={<ListChecks size={18} />}
+        active={activeTab === "rules"}
+        onClick={() => setActiveTab("rules")}
+      />
+
+      <NavItem
+        label="Backups"
+        icon={<History size={18} />}
+        active={activeTab === "backups"}
+        onClick={() => setActiveTab("backups")}
+      />
     </div>
   );
 }
@@ -36,7 +56,7 @@ function NavItem({ label, icon, active, onClick }) {
       onClick={onClick}
     >
       {icon}
-      {label}
+      <span>{label}</span>
     </div>
   );
-}
+} 

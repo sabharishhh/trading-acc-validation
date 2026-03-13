@@ -36,12 +36,12 @@ export default function UploadPanel({ refreshFiles, refreshStats }) {
   };
 
   const handleUpload = async () => {
-    if (!files.length) return;
+  if (!files.length) return;
 
-    setUploading(true);
-    setMessage("");
+  setUploading(true);
+  setMessage("");
 
-    const formData = new FormData();
+  const formData = new FormData();
     files.forEach((f) => formData.append("files", f));
 
     try {
@@ -50,14 +50,17 @@ export default function UploadPanel({ refreshFiles, refreshStats }) {
         body: formData,
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        throw new Error(errorText);
+      }
 
       setMessage("Upload successful");
       setFiles([]);
       await refreshFiles();
       await refreshStats();
-    } catch {
-      setMessage("Upload failed");
+    } catch (err) {
+      setMessage(err.message || "Upload failed");
     } finally {
       setUploading(false);
     }

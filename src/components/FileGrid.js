@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
+import { Trash2 } from "lucide-react";
 import StatusBadge from "./StatusBadge";
 
-export default function FileGrid({ files, loading }) {
+export default function FileGrid({ files, loading, deleteRule }) {
   if (loading) return <p>Loading files...</p>;
 
   return (
@@ -11,6 +12,14 @@ export default function FileGrid({ files, loading }) {
       <div className="grid">
         {files.map((file, i) => (
           <motion.div key={i} className="file-card" whileHover={{ y: -5 }}>
+
+            <button
+              className="delete-btn"
+              onClick={() => deleteRule(file.fileName)}
+            >
+              <Trash2 size={16}/>
+            </button>
+
             <h3>{file.fileName}</h3>
 
             <div className="meta">
@@ -22,6 +31,7 @@ export default function FileGrid({ files, loading }) {
               status={file.status}
               warnings={file.warnings}
             />
+
           </motion.div>
         ))}
       </div>

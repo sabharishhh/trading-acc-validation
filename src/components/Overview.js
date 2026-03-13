@@ -11,10 +11,25 @@ export default function Overview({ stats, loading }) {
         <KPI title="Total Files" value={stats.totalFiles} />
         <KPI title="Total Rules" value={stats.totalRules} />
         <KPI title="Agenda Groups" value={stats.agendaGroups} />
-        <KPI title="Last Reload" value={stats.lastReloadTime} />
+        <KPI title="Last Reload" value={formatTime(stats.lastReloadTime)} />
       </div>
     </motion.div>
   );
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return "-";
+
+  const date = new Date(timestamp);
+
+  return date.toLocaleString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
 function KPI({ title, value }) {
