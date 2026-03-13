@@ -386,24 +386,35 @@ body {
   background-color: #f0fdf4;
 }
 
-.cell-dropdown {
+/* Editable Cell Styles */
+.editable-cell { 
+  background-color: #f0fdf4; 
+  padding: 0 !important; 
+}
+
+.cell-input {
   width: 100%;
   height: 100%;
   border: none;
   background: transparent;
-  padding: 6px 8px;
-  font-size: 12px;
-  font-family: inherit;
-  cursor: pointer;
-  text-align: center;
+  padding: 8px;
   outline: none;
   color: #107c41;
   font-weight: 600;
+  text-align: center;
+  font-family: inherit;
+  font-size: 12px;
+  box-sizing: border-box; /* Ensures padding doesn't stretch the cell */
 }
 
-.cell-dropdown:focus {
+.cell-input:focus {
   background-color: #e2f5ea;
   box-shadow: inset 0 0 0 2px #107c41;
+}
+
+.cell-input::placeholder {
+  color: #a0c2b0;
+  font-weight: 400;
 }
 
 /* ================= Modern Backup Panel Layout ================= */
@@ -692,3 +703,4 @@ body {
   from { opacity: 0; transform: translateY(-10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+

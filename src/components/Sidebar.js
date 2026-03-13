@@ -1,5 +1,6 @@
 import {
   LayoutDashboard,
+  ClipboardList,
   FileSpreadsheet,
   Upload,
   ListChecks,
@@ -45,6 +46,15 @@ export default function Sidebar({ activeTab, setActiveTab }) {
         active={activeTab === "backups"}
         onClick={() => setActiveTab("backups")}
       />
+
+      {/* NEW AUDIT TRAIL NAV ITEM */}
+      <NavItem
+        label="Audit Trail"
+        icon={<ClipboardList size={18} />}
+        active={activeTab === "audit"}
+        onClick={() => setActiveTab("audit")}
+      />
+      
     </div>
   );
 }
@@ -59,4 +69,4 @@ function NavItem({ label, icon, active, onClick }) {
       <span>{label}</span>
     </div>
   );
-} 
+}

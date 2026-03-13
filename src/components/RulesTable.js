@@ -1,10 +1,23 @@
 import React, { useState } from "react";
 import { Save, ChevronDown, ChevronRight, FileSpreadsheet } from "lucide-react";
 
-export default function RulesTable({ rules, onRuleUpdated }) {
+export default function RulesTable({ rules, loading, onRuleUpdated }) {
   const [edits, setEdits] = useState({});
   const [saving, setSaving] = useState(false);
-  const [expandedFiles, setExpandedFiles] = useState({}); // Track expansion state
+  const [expandedFiles, setExpandedFiles] = useState({});
+
+  if (loading) {
+    return (
+      <div className="rules-container">
+        <h2 className="section-title">Active Rule Sets</h2>
+        {[1, 2, 3].map(i => (
+          <div key={i} className="rule-card skeleton-card" style={{ height: '60px', marginBottom: '12px' }}>
+            <div className="skeleton-pulse" style={{ width: '100%', height: '100%' }} />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (!rules || rules.length === 0) {
     return <div className="empty-state">No rules loaded in the engine.</div>;
@@ -61,6 +74,7 @@ export default function RulesTable({ rules, onRuleUpdated }) {
 
   return (
     <div className="rules-container">
+      <h2 className="section-title">Active Rule Sets</h2>
       {Object.entries(groupedRules).map(([fileName, fileRules]) => {
         const isExpanded = expandedFiles[fileName];
         const fileHasEdits = edits[fileName] && Object.keys(edits[fileName]).length > 0;
@@ -75,7 +89,6 @@ export default function RulesTable({ rules, onRuleUpdated }) {
 
         return (
           <div key={fileName} className={`rule-card ${isExpanded ? "expanded" : ""}`}>
-            {/* Card Header - Always Visible */}
             <div className="rule-card-header" onClick={() => toggleFile(fileName)}>
               <div className="header-left">
                 {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
@@ -94,7 +107,6 @@ export default function RulesTable({ rules, onRuleUpdated }) {
               </div>
             </div>
 
-            {/* Expanded Table Content */}
             {isExpanded && (
               <div className="rule-card-content">
                 <div className="rules-table-container">
@@ -112,22 +124,18 @@ export default function RulesTable({ rules, onRuleUpdated }) {
                           <td className="fixed-col">{rule.ruleId}</td>
                           <td>{rule.agendaGroup}</td>
                           {conditionColumns.map((col) => {
-                            const originalValue = rule.conditions[col] || "-";
-                            const isEditable = originalValue === "Y" || originalValue === "N";
+                            const originalValue = rule.conditions[col] || "";
                             const currentValue = edits[fileName]?.[rule.ruleId]?.[col] ?? originalValue;
 
                             return (
-                              <td key={col} className={isEditable ? "editable-cell" : ""}>
-                                {isEditable ? (
-                                  <select 
-                                    className="cell-dropdown" 
-                                    value={currentValue}
-                                    onChange={(e) => handleEdit(fileName, rule.ruleId, col, e.target.value)}
-                                  >
-                                    <option value="Y">Y</option>
-                                    <option value="N">N</option>
-                                  </select>
-                                ) : currentValue}
+                              <td key={col} className="editable-cell">
+                                <input 
+                                  type="text"
+                                  className="cell-input" 
+                                  value={currentValue}
+                                  placeholder="-"
+                                  onChange={(e) => handleEdit(fileName, rule.ruleId, col, e.target.value)}
+                                />
                               </td>
                             );
                           })}

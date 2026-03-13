@@ -4,8 +4,10 @@ import Overview from "./components/Overview";
 import FileGrid from "./components/FileGrid";
 import UploadPanel from "./components/UploadPanel";
 import RulesTable from "./components/RulesTable";
-import BackupPanel from "./components/Backup"; // Import the new Backup component
+import BackupPanel from "./components/Backup";
+import AuditPanel from "./components/Audit";
 import "./styles.css";
+
 
 const API_BASE = "http://localhost:8080";
 
@@ -141,6 +143,8 @@ export default function App() {
             onRestoreSuccess={handleSystemRefresh} 
           />
         )}
+
+        {activeTab === "audit" && <AuditPanel />}
 
       </main>
 
